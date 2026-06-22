@@ -283,7 +283,6 @@ table.skill thead th.sortable:hover{background:#eef0ea}
 .io-row{display:flex;gap:8px;align-items:center;margin:7px 0}
 .io-msg{font-size:12px;min-height:16px}
 .io-msg.ok{color:var(--good)}.io-msg.ng{color:var(--brand)}
-.dist-box{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
 /* 配置下のスキル表 */
 .sheet-skill{margin-top:18px;border-top:2px dashed var(--line);padding-top:13px}
 .sheet-skill h3{font-family:var(--disp);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:0 0 8px}
@@ -398,14 +397,6 @@ table.mini td.tt{font-family:var(--mono);font-weight:700;background:var(--panel-
           <div class="io-msg" id="ioMsg"></div>
         </div>
       </div>
-      <div class="dist-box">
-        <div class="io-row" style="flex-wrap:wrap">
-          <b style="font-size:13px">配布・他端末用</b>
-          <button class="btn-primary" id="distBtn" style="padding:8px 16px;font-size:13px">📦 データ入りHTMLを書き出す</button>
-        </div>
-        <p class="sub" style="margin:6px 0 0">現在のデータ（クルー・スキル・職位・構成・係数・メモ・配置）を埋め込んだ<b>単体HTML</b>を保存します。別の端末やスタッフに渡して開くだけで、そのデータが表示されます。<br>※ 各自が開いた後の編集はその端末内に保存されます（自動では同期しません）。最新を配り直すときは、もう一度書き出して渡してください。</p>
-        <div class="io-msg" id="distMsg"></div>
-      </div>
     </div>
 
     <div class="panel pad" style="margin-top:18px">
@@ -417,11 +408,13 @@ table.mini td.tt{font-family:var(--mono);font-weight:700;background:var(--panel-
         <div class="field"><label>anon public key</label><input type="text" id="syncKey" placeholder="eyJhbGci..."></div>
         <div class="field"><label>スペースID（店舗ごとに分ける合言葉）</label><input type="text" id="syncRoom" placeholder="shared"></div>
       </div>
-      <div class="io-row" style="margin-top:10px">
+      <div class="io-row" style="margin-top:10px;flex-wrap:wrap">
         <button class="btn-primary" id="syncConnect" style="padding:8px 16px;font-size:13px">接続して同期</button>
         <button class="btn-ghost" id="syncDisconnect">同期を解除</button>
+        <button class="btn-ghost" id="syncForcePush" style="color:var(--brand);border-color:#f0b6bf">⚠ この端末の内容でクラウドを上書き</button>
       </div>
       <div class="io-msg" id="syncMsg"></div>
+      <p class="sub" style="margin:6px 0 0;font-size:11px">「上書き」は、クラウド（＝全端末）のデータをこの端末の内容に置き換えます。データが消えた時の復旧や、正しい端末からの強制反映に使います。</p>
       <details style="margin-top:8px">
         <summary style="cursor:pointer;font-weight:700;font-size:12px;color:var(--ink-2)">かんたん設定手順（初回のみ）</summary>
         <ol style="font-size:12px;color:var(--ink-2);line-height:1.8;margin:8px 0 0;padding-left:20px">
@@ -510,17 +503,22 @@ const lsOK=(function(){try{localStorage.setItem('__mac_t','1');localStorage.remo
 function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function offMode(){return lsOK?'localsave':'local';}
-function masterObj(){return{crew:state.crew,skills:state.skills,patterns:state.patterns,configs:state.configs,settings:state.settings,configMemo:state.configMemo,targetComment:state.targetComment,sync:state.sync};}
+function masterObj(){return{crew:state.crew,skills:state.skills,patterns:state.patterns,configs:state.configs,settings:state.settings,configMemo:state.configMemo,targetComment:state.targetComment};}
 function sessionObj(){return{selected:state.selected,placement:state.placement,manual:state.manual,activePattern:state.activePattern};}
 async function saveMaster(){const s=JSON.stringify(masterObj());
   try{if(!hasStore)throw 0;await window.storage.set('mac_master',s,true);}
   catch(e){memMaster=JSON.parse(s);lsSet('mac_master',s);}
-  if(!applyingRemote){touchMaster();schedulePush();}
+  if(!applyingRemote){state.isSeed=false;touchMaster();schedulePush();}
   updateBadge();}
 async function saveSession(){try{if(!hasStore)throw 0;await window.storage.set('mac_session',JSON.stringify(sessionObj()),false);}catch(e){const s=JSON.stringify(sessionObj());memSession=JSON.parse(s);lsSet('mac_session',s);}}
 async function loadMaster(){try{if(!hasStore)throw 0;const r=await window.storage.get('mac_master',true);return(r&&r.value)?JSON.parse(r.value):null;}catch(e){const v=lsGet('mac_master');if(v){try{return JSON.parse(v);}catch(_){}}return memMaster;}}
 async function loadSession(){try{if(!hasStore)throw 0;const r=await window.storage.get('mac_session',false);return(r&&r.value)?JSON.parse(r.value):null;}catch(e){const v=lsGet('mac_session');if(v){try{return JSON.parse(v);}catch(_){}}return memSession;}}
 /* ===== クラウド・リアルタイム同期（Supabase / 最後の保存を優先） ===== */
+// 既定の接続先（ファイルに焼き込み）。key を入れておくと開くだけで自動接続（入力不要）。
+const SYNC_BAKED={url:'https://mgzdqysrvlpncxjwgnoq.supabase.co',key:'sb_publishable_HQt33_WagxoECTzUC1xpJQ_uiYigXJz',room:'shared'};
+// 同期設定は「共有データ」ではなく端末ごとに保存（同期で消えないように）
+function loadSyncCfg(){try{const v=lsGet('mac_sync');if(v){const o=JSON.parse(v);return{url:o.url||SYNC_BAKED.url||'',key:o.key||SYNC_BAKED.key||'',room:o.room||SYNC_BAKED.room||'shared'};}}catch(e){}return{url:SYNC_BAKED.url||'',key:SYNC_BAKED.key||'',room:SYNC_BAKED.room||'shared'};}
+function saveSyncCfg(){lsSet('mac_sync',JSON.stringify(state.sync||{}));}
 const deviceId=(function(){let d=lsGet('mac_device');if(!d){d='dev_'+Math.random().toString(36).slice(2,10);lsSet('mac_device',d);}return d;})();
 let sbClient=null,sbChannel=null,applyingRemote=false,pushTimer=null;
 function room(){return (state.sync&&state.sync.room)||'shared';}
@@ -531,7 +529,7 @@ async function pushMaster(){if(!sbClient)return;
     cloudStatus=error?'error':'ok';}catch(e){cloudStatus='error';}
   updateBadge();}
 async function applyRemoteMaster(data,rms){if(!data)return;
-  applyingRemote=true;applyMaster(data);state.masterUpdatedAt=rms;lsSet('mac_masterAt',String(rms));
+  applyingRemote=true;applyMaster(data);state.isSeed=false;state.masterUpdatedAt=rms;lsSet('mac_masterAt',String(rms));
   await saveMaster();applyingRemote=false;
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
   state.selected=state.selected.filter(id=>state.crew.find(c=>c.id===id));
@@ -548,7 +546,7 @@ async function connectCloud(){
     sbClient=supabase.createClient(state.sync.url,state.sync.key,{realtime:{params:{eventsPerSecond:5}}});
     const{data,error}=await sbClient.from('station_state').select('data,updated_ms').eq('id',room()).maybeSingle();
     if(error)throw error;
-    if(data){const rms=+data.updated_ms||0;if(rms>(state.masterUpdatedAt||0))await applyRemoteMaster(data.data,rms);else await pushMaster();}
+    if(data){const rms=+data.updated_ms||0;if(state.isSeed||rms>(state.masterUpdatedAt||0))await applyRemoteMaster(data.data,rms);else await pushMaster();}
     else{await pushMaster();}
     sbChannel=sbClient.channel('rt-'+room())
       .on('postgres_changes',{event:'*',schema:'public',table:'station_state',filter:'id=eq.'+room()},payload=>{
@@ -583,7 +581,6 @@ function applyMaster(m){state.crew=m.crew||[];state.skills=m.skills||{};
   const s=m.settings||{};
   state.settings={base:(s.bonusPer===undefined?3000:(s.base!=null?s.base:3000)),bonusPer:(s.bonusPer!=null?s.bonusPer:10),skill4Cap:(s.skill4Cap!=null?s.skill4Cap:1)};
   state.targetComment=m.targetComment||'';
-  state.sync=Object.assign({url:'',key:'',room:'shared'},m.sync||{});
   // 構成パターン：新形式 {patterns:[{id,name}], configs:{pid:{N:[...]}}, configMemo:{pid:{N:memo}}}
   if(Array.isArray(m.patterns)&&m.patterns.length){
     state.patterns=m.patterns.map(p=>({id:p.id,name:p.name}));
@@ -602,6 +599,7 @@ function readBootData(){const el=document.getElementById('bootData');if(!el)retu
 async function init(){
   setSync('loading');
   state.masterUpdatedAt=+lsGet('mac_masterAt')||0;
+  state.sync=loadSyncCfg();
   const boot=(!hasStore)?readBootData():null;
   const m=await loadMaster();
   let usedBoot=false;
@@ -618,7 +616,7 @@ async function init(){
   }
   if(!usedBoot){
     if(m)applyMaster(m);
-    else{applyMaster(seed());await saveMaster();}
+    else{applyMaster(seed());state.isSeed=true;state.masterUpdatedAt=0;lsSet('mac_masterAt','0');applyingRemote=true;await saveMaster();applyingRemote=false;}
   }
   if(cloudConfigured())cloudStatus='connecting';
   updateBadge();
@@ -719,30 +717,12 @@ function buildSlots(){
 
 /* ===== 初期状態 ===== */
 function seed(){
-  const crewNames=['佐藤','鈴木','田中','高橋','渡辺','伊藤','山本','中村'];
-  const crewRanks=['社員','SW','SW-T','トレーナー','トレーナーT','クルー','クルー','クルー'];
-  const crew=crewNames.map((n,i)=>({id:uid('c'),name:n,rank:crewRanks[i]||'クルー'}));
-  const skills={};
-  crew.forEach((c,ci)=>{ skills[c.id]={}; POSDEF.forEach((p,pi)=>{ skills[c.id][p.key]=(ci+pi)%4; }); });
-  // サンプル構成
-  const U=(...keys)=>({id:uid('u'),pos:keys});
-  // 「デリバリあり」：ライダー(RDR)を含む
-  const withDel={
-    4:[U('GRL'),U('INI','ASM'),U('DKC','DKD'),U('RDR')],
-    5:[U('GRL'),U('INI','ASM'),U('DKC'),U('DKD'),U('RDR')],
-    6:[U('GRL'),U('FRY'),U('INI','ASM'),U('DKC'),U('DKD'),U('RDR')],
-  };
-  // 「デリバリーなし」：ライダーを外しフロント/ポテトへ
-  const noDel={
-    4:[U('GRL'),U('INI','ASM'),U('DKC','DKD'),U('ODT')],
-    5:[U('GRL'),U('INI','ASM'),U('DKC'),U('DKD'),U('POT')],
-    6:[U('GRL'),U('FRY'),U('INI','ASM'),U('DKC'),U('DKD'),U('POT')],
-  };
+  // サンプルデータは入れない。パターン枠（デリバリあり/なし）と既定値だけの空の状態。
   const p1={id:'pat_main',name:'デリバリあり'},p2={id:'pat_nodel',name:'デリバリーなし'};
-  return {crew,skills,patterns:[p1,p2],configs:{[p1.id]:withDel,[p2.id]:noDel},configMemo:{[p1.id]:{},[p2.id]:{}},settings:{base:3000,bonusPer:10,skill4Cap:1}};
+  return {crew:[],skills:{},patterns:[p1,p2],configs:{[p1.id]:{},[p2.id]:{}},configMemo:{[p1.id]:{},[p2.id]:{}},settings:{base:3000,bonusPer:10,skill4Cap:1}};
 }
 
-let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0};
+let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false};
 // セッション状態（非永続）
 state.slots=buildSlots();
 state.selected=[];          // 出勤crewId
@@ -1294,30 +1274,6 @@ $('#impBtn').onclick=()=>{const txt=$('#impArea').value.trim();if(!txt){setIoMsg
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
   setIoMsg('読み込みました（'+state.crew.length+'名）','ok');renderSkill();renderBoard();};
 
-/* ===== データ入りHTMLを書き出す（配布・他端末用） =====
-   現在のDOMを複製→動的部分を空にし→データを bootData 要素で埋め込んで保存。
-   文字列regexを使わずDOM操作で行うため file:// でも安全に動作。 */
-function setDistMsg(m,cls){const el=$('#distMsg');if(!el)return;el.textContent=m;el.className='io-msg '+(cls||'');}
-$('#distBtn').onclick=()=>{
-  setDistMsg('書き出し中…','');
-  try{
-    const root=document.documentElement.cloneNode(true);
-    root.querySelectorAll('#bootData').forEach(e=>e.remove());                     // 既存の埋め込みを除去
-    ['#board','#skillTable','#unitsBox','#crewPick','#chips','#rankList','#sheetSkill','#legend','#expArea','#impArea'].forEach(sel=>{const e=root.querySelector(sel);if(e)e.innerHTML='';});
-    const lo=root.querySelector('#loading');if(lo)lo.style.display='';             // 開いた時にローディング表示を復活
-    const data={master:masterObj(),session:sessionObj(),exportedAt:Date.now()};
-    const json=JSON.stringify(data).replace(/<\//g,'<\\/');                        // 終了タグ混入対策
-    const s=document.createElement('script');s.id='bootData';s.type='application/json';s.textContent=json;
-    (root.querySelector('head')||root).appendChild(s);
-    const html='<!DOCTYPE html>\n'+root.outerHTML;
-    const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
-    const a=document.createElement('a');a.href=url;a.download='station-line_'+new Date().toISOString().slice(0,10)+'.html';
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
-    setDistMsg('書き出しました（'+state.crew.length+'名 / 約'+Math.round(html.length/1024)+'KB）。このHTMLを渡せば、開くだけでデータが表示されます。','ok');
-    flashSaved();
-  }catch(e){setDistMsg('書き出しに失敗しました：'+e.message,'ng');}
-};
-
 /* ===== クラウド同期 設定UI ===== */
 function setSyncMsg(m,cls){const el=$('#syncMsg');if(!el)return;el.textContent=m;el.className='io-msg '+(cls||'');}
 function syncFillFields(){const u=$('#syncUrl'),k=$('#syncKey'),r=$('#syncRoom');if(!u)return;
@@ -1329,16 +1285,23 @@ $('#syncConnect').onclick=async()=>{
   if(!url||!key){setSyncMsg('URL と anon キーを入力してください','ng');return;}
   if(typeof supabase==='undefined'||!supabase.createClient){setSyncMsg('同期ライブラリを読み込めませんでした（ネット接続が必要です）','ng');return;}
   state.sync={url,key,room:rm};
-  await saveMaster();           // 設定をローカル保存（接続後に共有データへも反映される）
+  saveSyncCfg();                // 設定はこの端末に保存（同期で消えない）
   setSyncMsg('接続中…','');
   await connectCloud();
   setSyncMsg(cloudStatus==='ok'?'接続しました。全端末でリアルタイム同期します。':'接続できませんでした。URL/キー・SQL設定・ネット接続を確認してください。',cloudStatus==='ok'?'ok':'ng');
+};
+$('#syncForcePush').onclick=async()=>{
+  if(!cloudConfigured()||!sbClient){setSyncMsg('先に「接続して同期」をしてください','ng');return;}
+  const ok=await showModal('この端末の内容で、クラウド（全端末）のデータを上書きします。\n他の端末のデータはこの端末の内容に置き換わります。実行しますか？','上書きする','やめる');
+  if(!ok)return;
+  state.isSeed=false;touchMaster();await pushMaster();
+  setSyncMsg(cloudStatus==='ok'?'この端末の内容でクラウドを上書きしました。他端末は「最新を取得」か再読み込みで反映されます。':'上書きに失敗しました（接続を確認してください）。',cloudStatus==='ok'?'ok':'ng');
 };
 $('#syncDisconnect').onclick=async()=>{
   try{if(sbChannel&&sbClient)await sbClient.removeChannel(sbChannel);}catch(_){}
   sbChannel=null;sbClient=null;cloudStatus='off';
   state.sync={url:'',key:'',room:(state.sync&&state.sync.room)||'shared'};
-  await saveMaster();updateBadge();syncFillFields();
+  saveSyncCfg();updateBadge();syncFillFields();
   setSyncMsg('同期を解除しました（この端末のローカル保存に戻ります）','ok');
 };
 
