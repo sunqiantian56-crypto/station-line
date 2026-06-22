@@ -307,16 +307,72 @@ table.mini td.tt{font-family:var(--mono);font-weight:700;background:var(--panel-
 .modal-btns .btn-primary{padding:9px 18px;font-size:13px}
 .save-flash{position:fixed;right:16px;bottom:130px;background:var(--ink);color:#fff;padding:8px 15px;border-radius:9px;font-size:13px;font-weight:700;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;z-index:60}
 .save-flash.show{opacity:1;transform:none}
+/* ===== ログイン/アカウント ===== */
+.auth-ov{position:fixed;inset:0;background:var(--paper);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-card{background:#fff;border:1px solid var(--line-2);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.18);width:100%;max-width:360px;padding:26px 24px 22px}
+.auth-logo{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:.05em;text-transform:uppercase;color:var(--brand);text-align:center}
+.auth-sub{text-align:center;font-size:12px;color:var(--ink-2);margin:2px 0 18px}
+.auth-tabs{display:flex;gap:6px;margin-bottom:16px}
+.auth-tab{flex:1;border:1px solid var(--line);background:var(--panel-2);border-radius:8px;padding:9px;font-weight:700;font-size:13px;color:var(--ink-2)}
+.auth-tab.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-family:var(--disp);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:5px}
+.auth-field input{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;font-family:var(--jp);font-size:15px}
+.auth-field input:focus{outline:none;border-color:var(--brand)}
+.auth-submit{width:100%;justify-content:center;margin-top:6px;padding:12px}
+.auth-msg{font-size:12.5px;min-height:18px;margin:2px 0 4px}
+.auth-msg.ng{color:var(--brand)}.auth-msg.ok{color:var(--good)}
+.auth-note{font-size:11.5px;color:var(--ink-2);margin-top:12px;line-height:1.6;text-align:center}
+.who-chip{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12px;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:4px 10px}
+.who-chip .role{font-family:var(--mono);font-size:9.5px;opacity:.9}
+.who-logout{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:7px;padding:5px 9px;font-weight:700;font-size:11.5px}
+/* 管理者のみ表示 / 閲覧のみ制御 */
+.admin-only{display:none!important}
+body.is-admin .admin-only{display:flex!important}
+.read-only .sk-btn,.read-only #addCrew,.read-only .rank-sel,.read-only .row-del,.read-only .row-head-in input,
+.read-only #setBase,.read-only #setBonus,.read-only #setCap,.read-only #impBtn,
+.read-only .target-comment textarea,.read-only #addUnit,.read-only .unit-pos select,.read-only .unit .rm,.read-only .upill .x,
+.read-only #nMinus,.read-only #nPlus,.read-only #configMemo{pointer-events:none!important;opacity:.5!important}
+.ro-banner{background:var(--fc-bg);border:1px solid #f0d38a;border-radius:9px;padding:9px 13px;font-size:12.5px;color:#7a5a07;margin-bottom:12px;display:none}
+.read-only .ro-banner{display:block}
+/* 管理画面 */
+.adm-sec{margin-top:16px}
+.acc-list{display:flex;flex-direction:column;gap:8px}
+.acc-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line-2);border-radius:10px;background:#fff;padding:9px 12px}
+.acc-row .nm{font-weight:700;font-size:14px}
+.acc-row .st{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px}
+.st-pending{background:#fff3da;color:#9a6b06}.st-approved{background:#e6f4ec;color:var(--good)}.st-rejected{background:#f3e2e4;color:var(--brand-d)}
+.acc-row .role-badge{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--ink);color:#fff;border-radius:999px;padding:2px 8px}
+.acc-row .sp{flex:1}
+.acc-row .btn-ghost{padding:6px 10px;font-size:12px}
+.acc-row .ce{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.perm-modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.perm-mode{border:1.5px solid var(--line);border-radius:9px;background:var(--panel-2);padding:8px 14px;font-weight:700;font-size:13px;color:var(--ink-2)}
+.perm-mode.on{background:var(--brand);border-color:var(--brand);color:#fff}
 </style>
 </head>
 <body>
 <div id="loading" class="loading-ov"><div class="lspin"></div><div>共有データを読み込んでいます…</div></div>
+<div id="authOv" class="auth-ov" hidden>
+  <div class="auth-card">
+    <div class="auth-logo">Station&nbsp;Line</div>
+    <div class="auth-sub">ポジショニングシート</div>
+    <div class="auth-tabs"><button class="auth-tab on" id="authTabLogin">ログイン</button><button class="auth-tab" id="authTabSignup">新規登録</button></div>
+    <div class="auth-field"><label>名前</label><input id="authName" type="text" autocomplete="username"></div>
+    <div class="auth-field"><label>パスワード</label><input id="authPw" type="password" autocomplete="current-password"></div>
+    <div class="auth-msg" id="authMsg"></div>
+    <button class="btn-primary auth-submit" id="authSubmit">ログイン</button>
+    <div class="auth-note" id="authNote"></div>
+  </div>
+</div>
 <header>
   <div class="head-inner">
     <span class="mk">Station&nbsp;Line</span>
     <span class="jp-sub">ポジショニングシート</span>
     <span class="head-spacer"></span>
     <span class="store">思わずワクワクする店舗</span>
+    <span id="whoChip" class="who-chip" hidden><span class="nm"></span><span class="role"></span></span>
+    <button id="logoutBtn" class="who-logout" hidden>ログアウト</button>
     <span id="syncBadge" class="sync loading">読込中…</span>
     <button id="refreshBtn" class="refresh-btn">最新を取得</button>
   </div>
@@ -324,6 +380,7 @@ table.mini td.tt{font-family:var(--mono);font-weight:700;background:var(--panel-
     <button class="tab" role="tab" data-tab="board" aria-selected="true"><span class="idx">01</span>配置</button>
     <button class="tab" role="tab" data-tab="skill" aria-selected="false"><span class="idx">02</span>スキル表</button>
     <button class="tab" role="tab" data-tab="config" aria-selected="false"><span class="idx">03</span>人数別構成</button>
+    <button class="tab admin-only" role="tab" data-tab="admin" aria-selected="false"><span class="idx">★</span>管理</button>
   </nav>
 </header>
 
@@ -360,6 +417,7 @@ table.mini td.tt{font-family:var(--mono);font-weight:700;background:var(--panel-
 
   <!-- 02 スキル表 -->
   <section id="tab-skill" hidden>
+    <div class="ro-banner">👀 あなたは閲覧のみです（編集権限がありません）。変更したい場合は管理者に依頼してください。</div>
     <p class="eyebrow">Skill matrix</p>
     <h2 class="sec">スキル表</h2>
     <p class="sub">クルー × ポジションの習熟度。セルをクリックで 0→1→2→3、Shift+クリックで戻る。番号枠（①②）は同一スキルを共有。自動保存。</p>
@@ -400,44 +458,6 @@ table.mini td.tt{font-family:var(--mono);font-weight:700;background:var(--panel-
     </div>
 
     <div class="panel pad" style="margin-top:18px">
-      <p class="eyebrow">Cloud sync</p>
-      <h2 class="sec" style="margin-bottom:5px">クラウド同期（リアルタイム）</h2>
-      <p class="sub">Supabase を使って、全端末で同じデータをリアルタイム共有します。下にプロジェクトの URL と anon キーを入れて「接続」。設定は配布HTMLにも引き継がれます。<br>※ 同時編集は「最後に保存した内容」が優先されます。</p>
-      <div class="settings-grid">
-        <div class="field"><label>Supabase URL</label><input type="text" id="syncUrl" placeholder="https://xxxx.supabase.co"></div>
-        <div class="field"><label>anon public key</label><input type="text" id="syncKey" placeholder="eyJhbGci..."></div>
-        <div class="field"><label>スペースID（店舗ごとに分ける合言葉）</label><input type="text" id="syncRoom" placeholder="shared"></div>
-      </div>
-      <div class="io-row" style="margin-top:10px;flex-wrap:wrap">
-        <button class="btn-primary" id="syncConnect" style="padding:8px 16px;font-size:13px">接続して同期</button>
-        <button class="btn-ghost" id="syncDisconnect">同期を解除</button>
-        <button class="btn-ghost" id="syncForcePush" style="color:var(--brand);border-color:#f0b6bf">⚠ この端末の内容でクラウドを上書き</button>
-      </div>
-      <div class="io-msg" id="syncMsg"></div>
-      <p class="sub" style="margin:6px 0 0;font-size:11px">「上書き」は、クラウド（＝全端末）のデータをこの端末の内容に置き換えます。データが消えた時の復旧や、正しい端末からの強制反映に使います。</p>
-      <details style="margin-top:8px">
-        <summary style="cursor:pointer;font-weight:700;font-size:12px;color:var(--ink-2)">かんたん設定手順（初回のみ）</summary>
-        <ol style="font-size:12px;color:var(--ink-2);line-height:1.8;margin:8px 0 0;padding-left:20px">
-          <li>supabase.com で無料アカウント → 新規プロジェクト作成</li>
-          <li>左メニュー「SQL Editor」で下記SQLを実行（テーブル作成＋公開設定）</li>
-          <li>「Project Settings → API」の <b>Project URL</b> と <b>anon public</b> キーを上の欄に貼り付け</li>
-          <li>「接続して同期」を押す。他の端末/スタッフには配布HTMLを渡せば自動で同じ設定になります</li>
-        </ol>
-        <textarea readonly class="io-box" style="width:100%;height:150px;border:1px solid var(--line);border-radius:8px;padding:9px;font-family:var(--mono);font-size:11px;margin-top:8px;white-space:pre">create table if not exists station_state(
-  id text primary key,
-  data jsonb,
-  updated_ms bigint,
-  updated_by text
-);
-alter table station_state enable row level security;
-create policy "anon read"  on station_state for select to anon using (true);
-create policy "anon write" on station_state for insert to anon with check (true);
-create policy "anon update" on station_state for update to anon using (true) with check (true);
-alter publication supabase_realtime add table station_state;</textarea>
-      </details>
-    </div>
-
-    <div class="panel pad" style="margin-top:18px">
       <p class="eyebrow">Sales model</p>
       <h2 class="sec" style="margin-bottom:5px">セールス予測の係数</h2>
       <p class="sub">配置されたクルーごとに算出して合計します（遊び用）。</p>
@@ -452,6 +472,7 @@ alter publication supabase_realtime add table station_state;</textarea>
 
   <!-- 03 人数別構成 -->
   <section id="tab-config" hidden>
+    <div class="ro-banner">👀 あなたは閲覧のみです（編集権限がありません）。</div>
     <p class="eyebrow">Config by headcount</p>
     <h2 class="sec">人数別ポジション構成</h2>
     <p class="sub">N人のときの「持ち場」を並べる。1持ち場 = 1人が担当。ポジションを複数入れれば掛け持ち（自動配置がそのまま割り当て）。持ち場の数 = 配置する人数。</p>
@@ -470,6 +491,40 @@ alter publication supabase_realtime add table station_state;</textarea>
       <textarea id="configMemo" placeholder="例：ピーク時はポテトがフライヤーのフォロー / DTランナーがドリンカー補助 …"></textarea>
     </div>
     <p class="muted">※ ファイナル・シフトマネージャー・非生産・クローズは自動配置の対象外（配置タブで手動でのみ置けます）。</p>
+  </section>
+
+  <!-- ★ 管理（管理者のみ） -->
+  <section id="tab-admin" hidden>
+    <p class="eyebrow">Admin</p>
+    <h2 class="sec">管理者メニュー</h2>
+    <p class="sub">アカウントの承認・権限管理。あなた（管理者）だけに表示されます。</p>
+
+    <div class="panel pad adm-sec">
+      <p class="eyebrow">Edit permission</p>
+      <h2 class="sec" style="margin-bottom:4px">編集権限のモード</h2>
+      <p class="sub" style="margin-bottom:8px">共有データ（スキル表・構成・係数・メモ）を誰が編集できるか。配置タブの並べ替えは各自いつでも可能です。</p>
+      <div class="perm-modes" id="permModes">
+        <button class="perm-mode" data-mode="all">全員 許可</button>
+        <button class="perm-mode" data-mode="list">個別に許可</button>
+        <button class="perm-mode" data-mode="none">全員 不許可（管理者のみ）</button>
+      </div>
+      <p class="sub" style="margin-top:8px;font-size:11.5px">※「申請方式」は今後追加予定です。</p>
+    </div>
+
+    <div class="panel pad adm-sec">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div><p class="eyebrow" style="margin:0">Accounts</p><h2 class="sec" style="margin:0">アカウント一覧 <span id="accPendingCount" style="font-weight:400;font-size:12px;color:var(--brand)"></span></h2></div>
+        <span style="flex:1"></span>
+        <button class="btn-ghost" id="accRefresh">更新</button>
+      </div>
+      <div class="acc-list" id="accList" style="margin-top:12px"><span class="muted">読み込み中…</span></div>
+    </div>
+
+    <div class="panel pad adm-sec">
+      <p class="eyebrow">History</p>
+      <h2 class="sec" style="margin-bottom:4px">編集履歴</h2>
+      <p class="sub">誰がどこを変更したか（項目ごと）。<b>Stage B で実装予定</b>。履歴の削除（管理者のみ）もここに追加します。</p>
+    </div>
   </section>
 </main>
 
@@ -503,7 +558,7 @@ const lsOK=(function(){try{localStorage.setItem('__mac_t','1');localStorage.remo
 function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function offMode(){return lsOK?'localsave':'local';}
-function masterObj(){return{crew:state.crew,skills:state.skills,patterns:state.patterns,configs:state.configs,settings:state.settings,configMemo:state.configMemo,targetComment:state.targetComment};}
+function masterObj(){return{crew:state.crew,skills:state.skills,patterns:state.patterns,configs:state.configs,settings:state.settings,configMemo:state.configMemo,targetComment:state.targetComment,perm:state.perm};}
 function sessionObj(){return{selected:state.selected,placement:state.placement,manual:state.manual,activePattern:state.activePattern};}
 async function saveMaster(){const s=JSON.stringify(masterObj());
   try{if(!hasStore)throw 0;await window.storage.set('mac_master',s,true);}
@@ -521,6 +576,7 @@ function loadSyncCfg(){try{const v=lsGet('mac_sync');if(v){const o=JSON.parse(v)
 function saveSyncCfg(){lsSet('mac_sync',JSON.stringify(state.sync||{}));}
 const deviceId=(function(){let d=lsGet('mac_device');if(!d){d='dev_'+Math.random().toString(36).slice(2,10);lsSet('mac_device',d);}return d;})();
 let sbClient=null,sbChannel=null,applyingRemote=false,pushTimer=null;
+function ensureClient(){if(sbClient)return sbClient;if(typeof supabase!=='undefined'&&supabase.createClient&&cloudConfigured()){sbClient=supabase.createClient(state.sync.url,state.sync.key,{realtime:{params:{eventsPerSecond:5}}});}return sbClient;}
 function room(){return (state.sync&&state.sync.room)||'shared';}
 function touchMaster(){state.masterUpdatedAt=Date.now();lsSet('mac_masterAt',String(state.masterUpdatedAt));}
 function schedulePush(){if(hasStore||!sbClient)return;clearTimeout(pushTimer);pushTimer=setTimeout(pushMaster,500);}
@@ -543,7 +599,7 @@ async function connectCloud(){
   try{
     cloudStatus='connecting';updateBadge();
     if(sbChannel&&sbClient){try{await sbClient.removeChannel(sbChannel);}catch(_){}}
-    sbClient=supabase.createClient(state.sync.url,state.sync.key,{realtime:{params:{eventsPerSecond:5}}});
+    if(!ensureClient()){cloudStatus='error';updateBadge();return;}
     const{data,error}=await sbClient.from('station_state').select('data,updated_ms').eq('id',room()).maybeSingle();
     if(error)throw error;
     if(data){const rms=+data.updated_ms||0;if(state.isSeed||rms>(state.masterUpdatedAt||0))await applyRemoteMaster(data.data,rms);else await pushMaster();}
@@ -567,7 +623,7 @@ function setSync(mode){syncMode=mode;const el=document.getElementById('syncBadge
   else if(mode==='cloud'){el.textContent='● リアルタイム同期中';el.className='sync ok';el.title='クラウド（Supabase）で全端末とリアルタイム同期しています';}
   else if(mode==='cloud-connecting'){el.textContent='● 同期接続中…';el.className='sync loading';}
   else if(mode==='cloud-error'){el.textContent='● 同期エラー（ローカル保存）';el.className='sync local';el.title='クラウドに接続できません。設定（URL/キー）とネット接続、SupabaseのSQL/RLS設定を確認してください。データはこの端末に保存されています';}
-  else if(mode==='localsave'){el.textContent='● 保存中（この端末）';el.className='sync ok';el.title='この端末のブラウザに自動保存されています。クラウド同期はスキル表タブの「クラウド同期」から設定できます';}
+  else if(mode==='localsave'){el.textContent='● 保存中（この端末）';el.className='sync ok';el.title='この端末のブラウザに自動保存されています（クラウド未接続）。ネットにつながると自動で同期します';}
   else{el.textContent='● 未保存（メモリのみ）';el.className='sync local';el.title='このブラウザでは保存できません。データ管理タブからJSONをエクスポートして保管してください';}
 }
 let cloudStatus='off';   // off|connecting|ok|error
@@ -581,6 +637,8 @@ function applyMaster(m){state.crew=m.crew||[];state.skills=m.skills||{};
   const s=m.settings||{};
   state.settings={base:(s.bonusPer===undefined?3000:(s.base!=null?s.base:3000)),bonusPer:(s.bonusPer!=null?s.bonusPer:10),skill4Cap:(s.skill4Cap!=null?s.skill4Cap:1)};
   state.targetComment=m.targetComment||'';
+  state.perm=Object.assign({mode:'all'},m.perm||{});
+  if(typeof applyPermUI==='function')applyPermUI();
   // 構成パターン：新形式 {patterns:[{id,name}], configs:{pid:{N:[...]}}, configMemo:{pid:{N:memo}}}
   if(Array.isArray(m.patterns)&&m.patterns.length){
     state.patterns=m.patterns.map(p=>({id:p.id,name:p.name}));
@@ -629,8 +687,10 @@ async function init(){
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
   state.ready=true;
   const lo=document.getElementById('loading');if(lo)lo.style.display='none';
+  applyPermUI();
   showTab('board');
   connectCloud();
+  initAuth();
 }
 async function refreshMaster(){
   // クラウド設定済みなら再接続して最新を取得
@@ -722,7 +782,7 @@ function seed(){
   return {crew:[],skills:{},patterns:[p1,p2],configs:{[p1.id]:{},[p2.id]:{}},configMemo:{[p1.id]:{},[p2.id]:{}},settings:{base:3000,bonusPer:10,skill4Cap:1}};
 }
 
-let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false};
+let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false,perm:{mode:'all'},account:null};
 // セッション状態（非永続）
 state.slots=buildSlots();
 state.selected=[];          // 出勤crewId
@@ -748,6 +808,116 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 function skColor(v){return ['#9aa093','#7FC1A0','#3E9E6E','#2E8B57','#C9A227'][v]||'#9aa093';}
 const slotById=id=>state.slots.find(s=>s.id===id);
 
+/* ===== アカウント / ログイン / 権限（簡易・クライアント側制御） ===== */
+function lsRemove(k){try{localStorage.removeItem(k);}catch(e){}}
+let acctChannel=null,authMode='login';
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function hashPass(name,pw){return sha256('mac1|'+name.trim().toLowerCase()+'|'+pw);}
+function sbReady(){return !!ensureClient();}
+async function acctFetch(name){const c=ensureClient();if(!c)throw new Error('offline');const{data,error}=await c.from('accounts').select('*').eq('name',name).maybeSingle();if(error)throw error;return data;}
+async function acctAll(){const c=ensureClient();if(!c)throw new Error('offline');const{data,error}=await c.from('accounts').select('*').order('created_ms',{ascending:true});if(error)throw error;return data||[];}
+async function acctSignup(name,pw){
+  name=name.trim();if(name.length<1)throw new Error('名前を入力してください');if(pw.length<4)throw new Error('パスワードは4文字以上にしてください');
+  const c=ensureClient();if(!c)throw new Error('ネットに接続できません');
+  if(await acctFetch(name))throw new Error('その名前は既に使われています');
+  const first=(await acctAll()).length===0;
+  const a={name,pass_hash:await hashPass(name,pw),status:first?'approved':'pending',role:first?'admin':'member',can_edit:first,created_ms:Date.now()};
+  const{error}=await c.from('accounts').insert(a);if(error)throw error;
+  return {account:a,first};
+}
+async function acctLogin(name,pw){
+  name=name.trim();if(!name||!pw)throw new Error('名前とパスワードを入力してください');
+  const a=await acctFetch(name);if(!a)throw new Error('そのアカウントはありません（新規登録してください）');
+  if((await hashPass(name,pw))!==a.pass_hash)throw new Error('パスワードが違います');
+  if(a.status==='pending')throw new Error('管理者の承認待ちです');
+  if(a.status==='rejected')throw new Error('参加が承認されていません');
+  return a;
+}
+function setCurrentAccount(a){
+  state.account=a?{name:a.name,role:a.role,can_edit:!!a.can_edit,status:a.status}:null;
+  if(a)lsSet('mac_login',JSON.stringify(state.account));
+  const chip=$('#whoChip'),lo=$('#logoutBtn');
+  if(chip){if(state.account){chip.hidden=false;lo.hidden=false;chip.querySelector('.nm').textContent=state.account.name;}else{chip.hidden=true;lo.hidden=true;}}
+  applyPermUI();
+}
+function logout(){lsRemove('mac_login');location.reload();}
+function canEdit(){const a=state.account;if(!a)return false;if(a.role==='admin')return true;const mode=(state.perm&&state.perm.mode)||'all';if(mode==='all')return true;if(mode==='none')return false;return !!a.can_edit;}
+function isAdmin(){return !!(state.account&&state.account.role==='admin');}
+function requireEdit(){if(canEdit())return true;toast('編集権限がありません（閲覧のみ）');return false;}
+function applyPermUI(){const ed=canEdit();document.body.classList.toggle('read-only',!ed&&!!state.account);document.body.classList.toggle('is-admin',isAdmin());
+  const chip=$('#whoChip');if(chip&&state.account){const r=chip.querySelector('.role');if(r)r.textContent=isAdmin()?'ADMIN':(ed?'EDIT':'VIEW');}}
+function toast(msg){const f=$('#saveFlash');if(!f)return;f.textContent=msg;f.classList.add('show');clearTimeout(flashT);flashT=setTimeout(()=>{f.classList.remove('show');f.textContent='保存しました';},1500);}
+/* 認証オーバーレイ */
+function setAuthMode(m){authMode=m;$('#authTabLogin').classList.toggle('on',m==='login');$('#authTabSignup').classList.toggle('on',m==='signup');$('#authSubmit').textContent=m==='login'?'ログイン':'登録して参加申請';setAuthMsg('','');}
+function setAuthMsg(t,cls){const e=$('#authMsg');if(e){e.textContent=t;e.className='auth-msg '+(cls||'');}}
+function showAuthOverlay(offline){const ov=$('#authOv');if(!ov)return;ov.hidden=false;setAuthMode('login');$('#authNote').textContent=offline?'※ ネットに接続できません。接続してから再度開いてください。':'初めての方は「新規登録」。最初に登録した人が管理者になります。';}
+function hideAuthOverlay(){const ov=$('#authOv');if(ov)ov.hidden=true;}
+async function initAuth(){
+  let cached=null;try{cached=JSON.parse(lsGet('mac_login')||'null');}catch(e){}
+  if(cached&&cached.name){
+    try{const a=await acctFetch(cached.name);
+      if(a&&a.status==='approved'){setCurrentAccount(a);hideAuthOverlay();subscribeAccounts();return true;}
+      lsRemove('mac_login');
+    }catch(e){setCurrentAccount(cached);hideAuthOverlay();return true;}
+  }
+  showAuthOverlay(!sbReady());return false;
+}
+function subscribeAccounts(){const c=ensureClient();if(!c||acctChannel)return;
+  acctChannel=c.channel('rt-accounts').on('postgres_changes',{event:'*',schema:'public',table:'accounts'},async()=>{
+    if(state.account){try{const a=await acctFetch(state.account.name);if(!a||a.status!=='approved'){toast('権限が変更されました');logout();return;}setCurrentAccount(a);}catch(e){}}
+    if(!$('#tab-admin').hidden)renderAdmin();
+  }).subscribe();
+}
+function afterLogin(){subscribeAccounts();applyPermUI();renderAdmin();showTab('board');}
+/* 管理画面 */
+async function renderAdmin(){
+  if(!isAdmin())return;
+  const mode=(state.perm&&state.perm.mode)||'all';
+  document.querySelectorAll('#permModes .perm-mode').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  const box=$('#accList');if(!box)return;
+  let list;try{list=await acctAll();}catch(e){box.innerHTML='<span class="muted">読み込めません（オフライン）</span>';return;}
+  const pend=list.filter(a=>a.status==='pending').length;
+  $('#accPendingCount').textContent=pend?('｜承認待ち '+pend+'件'):'';
+  box.innerHTML='';
+  if(!list.length){box.innerHTML='<span class="muted">アカウントがありません</span>';return;}
+  list.forEach(a=>box.appendChild(accRow(a)));
+}
+function accRow(a){
+  const me=state.account&&state.account.name===a.name;
+  const row=document.createElement('div');row.className='acc-row';
+  const stCls=a.status==='approved'?'st-approved':(a.status==='rejected'?'st-rejected':'st-pending');
+  const stTxt=a.status==='approved'?'承認済':(a.status==='rejected'?'拒否':'承認待ち');
+  row.innerHTML=`<span class="nm">${esc(a.name)}</span>`+(a.role==='admin'?'<span class="role-badge">管理者</span>':'')+`<span class="st ${stCls}">${stTxt}</span>`;
+  const sp=document.createElement('span');sp.className='sp';row.appendChild(sp);
+  if(a.status!=='approved'){const ap=document.createElement('button');ap.className='btn-ghost';ap.textContent='承認';ap.onclick=()=>accSet(a.name,{status:'approved'});row.appendChild(ap);}
+  if(a.status==='pending'){const rj=document.createElement('button');rj.className='btn-ghost';rj.textContent='拒否';rj.onclick=()=>accSet(a.name,{status:'rejected'});row.appendChild(rj);}
+  if(a.status==='approved'&&a.role!=='admin'){
+    const ce=document.createElement('label');ce.className='ce';const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!a.can_edit;cb.onchange=()=>accSet(a.name,{can_edit:cb.checked});ce.appendChild(cb);ce.appendChild(document.createTextNode('編集可'));row.appendChild(ce);
+  }
+  if(!me){const del=document.createElement('button');del.className='btn-ghost';del.style.color='var(--brand)';del.textContent='削除';del.onclick=async()=>{const ok=await showModal('「'+a.name+'」を削除しますか？','削除する','やめる');if(ok)accDelete(a.name);};row.appendChild(del);}
+  return row;
+}
+async function accSet(name,patch){try{await ensureClient().from('accounts').update(patch).eq('name',name);await renderAdmin();}catch(e){toast('更新に失敗しました');}}
+async function accDelete(name){try{await ensureClient().from('accounts').delete().eq('name',name);await renderAdmin();}catch(e){toast('削除に失敗しました');}}
+/* イベント結線 */
+document.getElementById('authTabLogin').onclick=()=>setAuthMode('login');
+document.getElementById('authTabSignup').onclick=()=>setAuthMode('signup');
+document.getElementById('logoutBtn').onclick=logout;
+document.getElementById('authSubmit').onclick=async()=>{
+  const btn=document.getElementById('authSubmit');const name=document.getElementById('authName').value,pw=document.getElementById('authPw').value;
+  btn.disabled=true;
+  try{
+    if(authMode==='signup'){const r=await acctSignup(name,pw);
+      if(r.first){setCurrentAccount(r.account);hideAuthOverlay();afterLogin();}
+      else{setAuthMsg('登録しました。管理者の承認をお待ちください。','ok');setAuthMode('login');}
+    }else{const a=await acctLogin(name,pw);setCurrentAccount(a);hideAuthOverlay();afterLogin();}
+  }catch(e){setAuthMsg(e.message||'失敗しました','ng');}
+  btn.disabled=false;
+};
+document.getElementById('authPw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('authSubmit').click();});
+document.getElementById('accRefresh').onclick=()=>renderAdmin();
+document.querySelectorAll('#permModes .perm-mode').forEach(b=>b.onclick=()=>{if(!isAdmin())return;state.perm={mode:b.dataset.mode};save();renderAdmin();applyPermUI();});
+
 /* ===== 構成パターン：デリバリ あり(ON)／なし(OFF) のトグル ===== */
 function activeConfigs(){const pid=state.activePattern||(state.patterns[0]&&state.patterns[0].id);state.configs[pid]=state.configs[pid]||{};return state.configs[pid];}
 function cfgN(N){return activeConfigs()[N]||[];}
@@ -768,8 +938,8 @@ function renderPatternToggle(container){
 }
 
 /* ===== タブ ===== */
-const tabs={board:'#tab-board',skill:'#tab-skill',config:'#tab-config'};
-function showTab(n){Object.entries(tabs).forEach(([k,sel])=>$(sel).hidden=k!==n);document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===n));$('#tray').hidden=(n!=='board')||state.selected.length===0;if(n==='skill')renderSkill();if(n==='config')renderConfig();if(n==='board')renderBoard();}
+const tabs={board:'#tab-board',skill:'#tab-skill',config:'#tab-config',admin:'#tab-admin'};
+function showTab(n){if(n==='admin'&&!isAdmin())n='board';Object.entries(tabs).forEach(([k,sel])=>{const el=$(sel);if(el)el.hidden=k!==n;});document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===n));$('#tray').hidden=(n!=='board')||state.selected.length===0;if(n==='skill')renderSkill();if(n==='config')renderConfig();if(n==='board')renderBoard();if(n==='admin')renderAdmin();}
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
 
 /* ===== 01 配置 ===== */
@@ -1274,36 +1444,9 @@ $('#impBtn').onclick=()=>{const txt=$('#impArea').value.trim();if(!txt){setIoMsg
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
   setIoMsg('読み込みました（'+state.crew.length+'名）','ok');renderSkill();renderBoard();};
 
-/* ===== クラウド同期 設定UI ===== */
-function setSyncMsg(m,cls){const el=$('#syncMsg');if(!el)return;el.textContent=m;el.className='io-msg '+(cls||'');}
-function syncFillFields(){const u=$('#syncUrl'),k=$('#syncKey'),r=$('#syncRoom');if(!u)return;
-  const s=state.sync||{};u.value=s.url||'';k.value=s.key||'';r.value=s.room||'shared';}
-$('#syncConnect').onclick=async()=>{
-  const url=$('#syncUrl').value.trim().replace(/\/+$/,'');
-  const key=$('#syncKey').value.trim();
-  const rm=($('#syncRoom').value.trim())||'shared';
-  if(!url||!key){setSyncMsg('URL と anon キーを入力してください','ng');return;}
-  if(typeof supabase==='undefined'||!supabase.createClient){setSyncMsg('同期ライブラリを読み込めませんでした（ネット接続が必要です）','ng');return;}
-  state.sync={url,key,room:rm};
-  saveSyncCfg();                // 設定はこの端末に保存（同期で消えない）
-  setSyncMsg('接続中…','');
-  await connectCloud();
-  setSyncMsg(cloudStatus==='ok'?'接続しました。全端末でリアルタイム同期します。':'接続できませんでした。URL/キー・SQL設定・ネット接続を確認してください。',cloudStatus==='ok'?'ok':'ng');
-};
-$('#syncForcePush').onclick=async()=>{
-  if(!cloudConfigured()||!sbClient){setSyncMsg('先に「接続して同期」をしてください','ng');return;}
-  const ok=await showModal('この端末の内容で、クラウド（全端末）のデータを上書きします。\n他の端末のデータはこの端末の内容に置き換わります。実行しますか？','上書きする','やめる');
-  if(!ok)return;
-  state.isSeed=false;touchMaster();await pushMaster();
-  setSyncMsg(cloudStatus==='ok'?'この端末の内容でクラウドを上書きしました。他端末は「最新を取得」か再読み込みで反映されます。':'上書きに失敗しました（接続を確認してください）。',cloudStatus==='ok'?'ok':'ng');
-};
-$('#syncDisconnect').onclick=async()=>{
-  try{if(sbChannel&&sbClient)await sbClient.removeChannel(sbChannel);}catch(_){}
-  sbChannel=null;sbClient=null;cloudStatus='off';
-  state.sync={url:'',key:'',room:(state.sync&&state.sync.room)||'shared'};
-  saveSyncCfg();updateBadge();syncFillFields();
-  setSyncMsg('同期を解除しました（この端末のローカル保存に戻ります）','ok');
-};
+/* クラウド同期の設定画面は撤去。鍵は SYNC_BAKED に焼き込み済みで開くだけ自動接続。
+   バックアップ復旧は「データのエクスポート/インポート」のJSON読み込み→保存で全端末へ反映される。 */
+function syncFillFields(){}
 
 /* ===== 03 人数別構成 ===== */
 const AUTO_POS=POSDEF.filter(p=>!p.manual); // 自動対象ポジション
