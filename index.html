@@ -243,8 +243,12 @@ td.cell{padding:3px;text-align:center}
 .copy-cfg{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2);font-weight:700;margin-left:auto}
 .copy-cfg input{width:48px;border:1px solid var(--line);border-radius:7px;padding:5px 6px;font-family:var(--mono);font-weight:700;font-size:14px;text-align:center}
 .copy-cfg input:focus{outline:none;border-color:var(--brand)}
-.date-note{border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-family:var(--jp);font-size:13px;background:#fff;min-width:180px;flex:0 1 250px}
-.date-note:focus{outline:none;border-color:var(--brand)}
+.date-fields{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#fff;flex-wrap:wrap}
+.date-fields .dl{font-size:12px;font-weight:700;color:var(--ink-2)}
+.date-fields input,.date-fields select{border:1px solid var(--line);border-radius:6px;padding:5px 4px;font-family:var(--mono);font-weight:700;font-size:14px;text-align:center;background:#fff}
+.date-fields input{width:42px}
+.date-fields select{width:46px;font-family:var(--jp)}
+.date-fields input:focus,.date-fields select:focus{outline:none;border-color:var(--brand)}
 .unit-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .unit-h .no{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--brand)}
 .unit-h .mh{font-size:11px;color:var(--ink-2)}
@@ -408,7 +412,14 @@ body.is-admin .admin-only{display:flex!important}
 
     <div class="topbar">
       <div class="info" id="cfgInfo">出勤を選択してください</div>
-      <input id="dateNote" class="date-note" placeholder="📅 日時（例 6/23(月) 17:00〜）※画像に表示・任意">
+      <span class="date-fields" title="画像に表示（空欄なら印刷後に手書きできます）">
+        <span class="dl">📅</span>
+        <input id="dM" type="number" min="1" max="12" placeholder="月"><span class="dl">月</span>
+        <input id="dD" type="number" min="1" max="31" placeholder="日"><span class="dl">日</span>
+        <select id="dDow"><option value="">曜</option><option>月</option><option>火</option><option>水</option><option>木</option><option>金</option><option>土</option><option>日</option></select>
+        <input id="dH" type="number" min="0" max="23" placeholder="時"><span class="dl">時</span>
+        <input id="dMin" type="number" min="0" max="59" placeholder="分"><span class="dl">分</span>
+      </span>
       <span class="spacer"></span>
       <button class="btn-ghost" id="shotBtn">📷 画像保存</button>
       <button class="btn-ghost" id="clearBtn">クリア</button>
@@ -575,7 +586,7 @@ function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return f
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function offMode(){return lsOK?'localsave':'local';}
 function masterObj(){return{crew:state.crew,skills:state.skills,patterns:state.patterns,configs:state.configs,settings:state.settings,configMemo:state.configMemo,targetComment:state.targetComment,perm:state.perm};}
-function sessionObj(){return{selected:state.selected,placement:state.placement,manual:state.manual,activePattern:state.activePattern,dateNote:state.dateNote};}
+function sessionObj(){return{selected:state.selected,placement:state.placement,manual:state.manual,activePattern:state.activePattern,dateFields:state.dateFields};}
 async function saveMaster(){const s=JSON.stringify(masterObj());
   try{if(!hasStore)throw 0;await window.storage.set('mac_master',s,true);}
   catch(e){memMaster=JSON.parse(s);lsSet('mac_master',s);}
@@ -698,7 +709,7 @@ async function init(){
     state.selected=(state.selected||[]).filter(id=>state.crew.find(c=>c.id===id));
   }else{
     const sess=await loadSession();
-    if(sess){state.selected=(sess.selected||[]).filter(id=>state.crew.find(c=>c.id===id));state.placement=sess.placement||{};state.manual=sess.manual||{};state.activePattern=sess.activePattern||null;state.dateNote=sess.dateNote||'';}
+    if(sess){state.selected=(sess.selected||[]).filter(id=>state.crew.find(c=>c.id===id));state.placement=sess.placement||{};state.manual=sess.manual||{};state.activePattern=sess.activePattern||null;state.dateFields=Object.assign({m:'',d:'',dow:'',h:'',min:''},sess.dateFields||{});}
   }
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
   state.ready=true;
@@ -798,7 +809,7 @@ function seed(){
   return {crew:[],skills:{},patterns:[p1,p2],configs:{[p1.id]:{},[p2.id]:{}},configMemo:{[p1.id]:{},[p2.id]:{}},settings:{base:3000,bonusPer:10,skill4Cap:1}};
 }
 
-let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false,perm:{mode:'all'},account:null,dateNote:'',dragUnit:null};
+let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false,perm:{mode:'all'},account:null,dateFields:{m:'',d:'',dow:'',h:'',min:''},dragUnit:null};
 // セッション状態（非永続）
 state.slots=buildSlots();
 state.selected=[];          // 出勤crewId
@@ -1012,7 +1023,7 @@ function unplace(slotId){delete state.placement[slotId];delete state.manual[slot
 function renderBoard(){
   renderCrewPick();
   renderPatternToggle($('#boardPatternBar'));
-  const dn=$('#dateNote');if(dn&&document.activeElement!==dn)dn.value=state.dateNote||'';
+  fillDateFields();
   const N=state.selected.length;
   const cfg=cfgN(N);
   const info=$('#cfgInfo');const auto=$('#autoBtn');
@@ -1239,7 +1250,8 @@ function savePlacementImage(){
   if(!bx.width){showTab('board');return;}
   const dp=delPats();const deliv=(state.activePattern===dp.on.id)?'あり':'なし';
   const dateStr=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
-  const dateNote=(state.dateNote||'').trim();
+  const df=state.dateFields||{};const dv=k=>((df[k]==null?'':df[k])+'').trim();
+  const dvals={m:dv('m'),d:dv('d'),dow:dv('dow'),h:dv('h'),min:dv('min')};
   const metrics=[
     {lab:'Σ SKILL',val:$('#mSkill').textContent,accent:true},
     {lab:'SALES (PRED.)',val:$('#mSales').textContent},
@@ -1259,8 +1271,9 @@ function savePlacementImage(){
   function wrapText(txt,maxW,fontStr){ctx.font=fontStr;const lines=[];String(txt).split(/\n/).forEach(par=>{let line='';for(const ch of par){if(ctx.measureText(line+ch).width>maxW&&line){lines.push(line);line='';}line+=ch;}lines.push(line);});return lines;}
   // ---- 上部レイアウト計算 ----
   const chipRows=layoutChips(sel.map(c=>c.name));
-  const headH=76,mH=66;
-  let y=PAD;const headerY=y;y+=headH+16;
+  const headH=76,mH=66,dateStripH=56;
+  let y=PAD;const headerY=y;y+=headH+12;
+  const dateY=y;y+=dateStripH+14;
   const metricsY=y;y+=mH+18;
   const crewTitleY=y;y+=16;const crewRowsY=y;y+=chipRows.length*36+12;
   const boardY=y;y+=Math.round(bx.height)+PAD;
@@ -1274,9 +1287,19 @@ function savePlacementImage(){
   ctx.fillStyle='#fff';ctx.textBaseline='alphabetic';ctx.textAlign='left';
   ctx.font=F(700,25,DISP);ctx.fillText('STATION LINE',PAD+18,headerY+35);
   ctx.font=F(700,13);ctx.fillText('ポジショニングシート',PAD+18,headerY+58);
-  ctx.textAlign='right';ctx.font=F(700,16);ctx.fillText(dateNote||dateStr,W-PAD-18,headerY+31);
-  ctx.font=F(700,13);ctx.globalAlpha=.92;ctx.fillText(`デリバリー：${deliv}　／　出勤 ${sel.length}名`+(dateNote?`　／　作成 ${dateStr}`:''),W-PAD-18,headerY+54);
+  ctx.textAlign='right';ctx.font=F(700,14);ctx.fillText(`デリバリー：${deliv}　／　出勤 ${sel.length}名`,W-PAD-18,headerY+34);
+  ctx.font=F(700,12);ctx.globalAlpha=.85;ctx.fillText(`作成 ${dateStr}`,W-PAD-18,headerY+55);
   ctx.globalAlpha=1;ctx.textAlign='left';
+  // 日時（記入枠・空欄なら印刷後に手書き）
+  ctx.fillStyle=C.panel;rr(PAD,dateY,W-PAD*2,dateStripH,12);ctx.fill();ctx.strokeStyle=C.line2;ctx.lineWidth=1;rr(PAD,dateY,W-PAD*2,dateStripH,12);ctx.stroke();
+  (function(){
+    let x=PAD+18;const cyc=dateY+dateStripH/2;
+    ctx.fillStyle=C.ink2;ctx.font=F(700,12,DISP);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('DATE / TIME',x,cyc-1);x+=ctx.measureText('DATE / TIME').width+20;
+    const box=(val,w)=>{ctx.strokeStyle=C.ink2;ctx.lineWidth=1.5;rr(x,cyc-17,w,34,7);ctx.stroke();if(val){ctx.fillStyle=C.ink;ctx.font=F(700,19);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(val,x+w/2,cyc+1);}x+=w+5;};
+    const lab=(t,sz)=>{ctx.fillStyle=C.ink;ctx.font=F(700,sz||17);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(t,x,cyc+1);x+=ctx.measureText(t).width+9;};
+    box(dvals.m,52);lab('月');box(dvals.d,52);lab('日');lab('（');box(dvals.dow,46);lab('）');box(dvals.h,52);lab('時');box(dvals.min,52);lab('分');
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  })();
   // メトリクス
   const mW=W-PAD*2,cellW=mW/metrics.length;
   ctx.fillStyle=C.panel;rr(PAD,metricsY,mW,mH,12);ctx.fill();ctx.strokeStyle=C.line2;ctx.lineWidth=1;rr(PAD,metricsY,mW,mH,12);ctx.stroke();
@@ -1469,7 +1492,9 @@ $('#setBonus').onchange=e=>{state.settings.bonusPer=Math.max(0,Math.min(100,+e.t
 $('#setCap').onchange=e=>{state.settings.skill4Cap=Math.max(1,Math.round(+e.target.value||1));save();renderSkill();};
 // 配置タブ クルー検索
 $('#crewSearch').oninput=()=>{state.crewSearch=$('#crewSearch').value;renderCrewPick();};
-$('#dateNote').oninput=()=>{state.dateNote=$('#dateNote').value;scheduleSaveSession();};
+const DATE_FIELD_IDS={dM:'m',dD:'d',dDow:'dow',dH:'h',dMin:'min'};
+function fillDateFields(){const f=state.dateFields||{};Object.entries(DATE_FIELD_IDS).forEach(([id,k])=>{const el=$('#'+id);if(el&&document.activeElement!==el)el.value=f[k]||'';});}
+Object.entries(DATE_FIELD_IDS).forEach(([id,k])=>{const el=$('#'+id);if(el)el.oninput=el.onchange=()=>{state.dateFields=state.dateFields||{};state.dateFields[k]=el.value;scheduleSaveSession();};});
 // スキル表 検索・フィルタ
 $('#skillSearch').oninput=()=>{state.skillSearch=$('#skillSearch').value;renderSkill();};
 $('#filterPos').onchange=()=>{state.skillFilter.pos=$('#filterPos').value;renderSkill();};
