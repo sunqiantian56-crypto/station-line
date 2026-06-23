@@ -548,6 +548,19 @@ body.is-admin .admin-only{display:flex!important}
     </div>
 
     <div class="panel pad adm-sec">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div><p class="eyebrow" style="margin:0">Backup</p><h2 class="sec" style="margin:0">バックアップ／復元</h2></div>
+        <span style="flex:1"></span>
+        <button class="btn-ghost" id="bkDownload">💾 JSONダウンロード</button>
+        <button class="btn-ghost" id="bkNow">今すぐバックアップ</button>
+        <button class="btn-ghost" id="bkRefresh">更新</button>
+      </div>
+      <p class="sub" style="margin:6px 0 0">数分おきに自動でクラウドに保存されます。上書き事故などはここから過去の時点に戻せます（最大60件保持）。「JSONダウンロード」は端末にファイル保存（オフライン保管用）。</p>
+      <div class="io-msg" id="bkMsg"></div>
+      <div class="acc-list" id="bkList" style="margin-top:10px"><span class="muted">—</span></div>
+    </div>
+
+    <div class="panel pad adm-sec">
       <p class="eyebrow">History</p>
       <h2 class="sec" style="margin-bottom:4px">編集履歴</h2>
       <p class="sub">誰がどこを変更したか（項目ごと）。<b>Stage B で実装予定</b>。履歴の削除（管理者のみ）もここに追加します。</p>
@@ -610,7 +623,27 @@ function schedulePush(){if(hasStore||!sbClient)return;clearTimeout(pushTimer);pu
 async function pushMaster(){if(!sbClient)return;
   try{const{error}=await sbClient.from('station_state').upsert({id:room(),data:masterObj(),updated_ms:state.masterUpdatedAt,updated_by:deviceId});
     cloudStatus=error?'error':'ok';}catch(e){cloudStatus='error';}
-  updateBadge();}
+  updateBadge();maybeBackup();}
+/* ===== バックアップ（クラウド・自動スナップショット＋復元） ===== */
+let lastBackupMs=0;
+async function maybeBackup(force){
+  if(!sbClient)return;const now=Date.now();
+  if(!force&&now-lastBackupMs<180000)return;   // 3分に1回まで（自動）
+  if((state.crew||[]).length===0&&!force)return; // 空データは自動保存しない（事故データで履歴汚さない）
+  lastBackupMs=now;
+  try{
+    await sbClient.from('backups').insert({ts_ms:now,who:(state.account&&state.account.name)||deviceId,crew_count:(state.crew||[]).length,data:masterObj()});
+    // 60件超の古いものを削除
+    const{data}=await sbClient.from('backups').select('id').order('ts_ms',{ascending:false});
+    if(data&&data.length>60){const old=data.slice(60).map(r=>r.id);await sbClient.from('backups').delete().in('id',old);}
+  }catch(e){}
+}
+function downloadMasterJSON(){
+  const blob=new Blob([JSON.stringify(masterObj(),null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='station-line_backup_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
 async function applyRemoteMaster(data,rms){if(!data)return;
   applyingRemote=true;applyMaster(data);state.isSeed=false;state.masterUpdatedAt=rms;lsSet('mac_masterAt',String(rms));
   await saveMaster();applyingRemote=false;
@@ -906,8 +939,42 @@ async function renderAdmin(){
   const pend=list.filter(a=>a.status==='pending').length;
   $('#accPendingCount').textContent=pend?('｜承認待ち '+pend+'件'):'';
   box.innerHTML='';
-  if(!list.length){box.innerHTML='<span class="muted">アカウントがありません</span>';return;}
-  list.forEach(a=>box.appendChild(accRow(a)));
+  if(!list.length){box.innerHTML='<span class="muted">アカウントがありません</span>';}
+  else list.forEach(a=>box.appendChild(accRow(a)));
+  renderBackups();
+}
+function setBkMsg(m,cls){const el=$('#bkMsg');if(!el)return;el.textContent=m;el.className='io-msg '+(cls||'');}
+async function renderBackups(){
+  if(!isAdmin())return;const box=$('#bkList');if(!box)return;
+  if(!sbClient){box.innerHTML='<span class="muted">クラウド未接続</span>';return;}
+  let list;try{const{data,error}=await sbClient.from('backups').select('id,ts_ms,who,crew_count').order('ts_ms',{ascending:false});if(error)throw error;list=data||[];}catch(e){box.innerHTML='<span class="muted">読み込めません（SQL未実行かもしれません）</span>';return;}
+  box.innerHTML='';
+  if(!list.length){box.innerHTML='<span class="muted">バックアップがまだありません</span>';return;}
+  list.forEach(b=>{
+    const row=document.createElement('div');row.className='acc-row';
+    const dt=new Date(+b.ts_ms||0);const ts=dt.toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    row.innerHTML=`<span class="nm" style="font-family:var(--mono);font-size:13px">${ts}</span><span class="st st-approved">クルー${b.crew_count==null?'?':b.crew_count}名</span><span style="font-size:12px;color:var(--ink-2)">${esc(b.who||'')}</span>`;
+    const sp=document.createElement('span');sp.className='sp';row.appendChild(sp);
+    const rs=document.createElement('button');rs.className='btn-ghost';rs.textContent='この時点に復元';rs.onclick=()=>restoreBackup(b.id,ts);row.appendChild(rs);
+    box.appendChild(row);
+  });
+}
+async function restoreBackup(id,ts){
+  if(!isAdmin()||!sbClient)return;
+  const ok=await showModal(`${ts} の時点に復元します。\n今の共有データはこの内容に置き換わります（全端末に反映）。\n※ 復元の直前に現在の状態も自動バックアップされます。`,'復元する','やめる');
+  if(!ok)return;
+  setBkMsg('復元中…','');
+  try{
+    await maybeBackup(true); // 現状を先に保存（復元自体を取り消せるように）
+    const{data,error}=await sbClient.from('backups').select('data').eq('id',id).maybeSingle();
+    if(error||!data||!data.data)throw new Error('取得失敗');
+    applyMaster(data.data);
+    if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
+    state.selected=state.selected.filter(cid=>state.crew.find(c=>c.id===cid));
+    touchMaster();await saveMaster();await maybeBackup(true);
+    renderSkill();renderBoard();renderAdmin();
+    setBkMsg('復元しました（クルー'+(state.crew||[]).length+'名）。他端末は「最新を取得」か再読み込みで反映されます。','ok');
+  }catch(e){setBkMsg('復元に失敗しました：'+(e.message||e),'ng');}
 }
 function accRow(a){
   const me=state.account&&state.account.name===a.name;
@@ -943,6 +1010,9 @@ document.getElementById('authSubmit').onclick=async()=>{
 };
 document.getElementById('authPw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('authSubmit').click();});
 document.getElementById('accRefresh').onclick=()=>renderAdmin();
+document.getElementById('bkRefresh').onclick=()=>renderBackups();
+document.getElementById('bkDownload').onclick=()=>{downloadMasterJSON();setBkMsg('JSONをダウンロードしました（端末に保存）。','ok');};
+document.getElementById('bkNow').onclick=async()=>{if(!sbClient){setBkMsg('クラウド未接続です','ng');return;}setBkMsg('バックアップ中…','');await maybeBackup(true);await renderBackups();setBkMsg('バックアップしました。','ok');};
 document.querySelectorAll('#permModes .perm-mode').forEach(b=>b.onclick=()=>{if(!isAdmin())return;state.perm={mode:b.dataset.mode};save();renderAdmin();applyPermUI();});
 
 /* ===== 構成パターン：デリバリ あり(ON)／なし(OFF) のトグル ===== */
