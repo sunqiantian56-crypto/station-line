@@ -69,6 +69,12 @@ h2.sec{font-size:18px;font-weight:900;margin:0 0 12px}
 /* board */
 .board{display:grid;gap:8px;grid-template-columns:2.05fr 1.1fr 0.9fr;grid-template-rows:auto 1fr;align-items:stretch}
 @media(max-width:1000px){.board{grid-template-columns:1fr;grid-template-rows:none}.bcol-left,.bcol-mid,.bcol-right,.target-comment{grid-column:1!important;grid-row:auto!important}.bcol-left,.bcol-mid{justify-content:flex-start!important}.target-comment{min-height:120px}}
+/* 画像保存時だけPC版(3カラム)レイアウトを強制（スマホでも同じ見た目で出力） */
+.board.cap-desktop{grid-template-columns:2.05fr 1.1fr 0.9fr!important;grid-template-rows:auto 1fr!important;width:1180px!important;max-width:none!important}
+.board.cap-desktop .bcol-left{grid-column:1!important;grid-row:1!important;justify-content:space-between!important}
+.board.cap-desktop .bcol-mid{grid-column:2!important;grid-row:1!important;justify-content:space-between!important}
+.board.cap-desktop .bcol-right{grid-column:3!important;grid-row:1/span 2!important}
+.board.cap-desktop .target-comment{grid-column:1/span 2!important;grid-row:2!important;min-height:0!important}
 .bcol{display:flex;flex-direction:column;gap:8px;min-width:0;justify-content:flex-start}
 .bcol-left{grid-column:1;grid-row:1;justify-content:space-between}
 .bcol-mid{grid-column:2;grid-row:1;justify-content:space-between}
@@ -555,7 +561,7 @@ body.is-admin .admin-only{display:flex!important}
         <button class="btn-ghost" id="bkNow">今すぐバックアップ</button>
         <button class="btn-ghost" id="bkRefresh">更新</button>
       </div>
-      <p class="sub" style="margin:6px 0 0">数分おきに自動でクラウドに保存されます。上書き事故などはここから過去の時点に戻せます（最大60件保持）。「JSONダウンロード」は端末にファイル保存（オフライン保管用）。</p>
+      <p class="sub" style="margin:6px 0 0">保存内容＝<b>クルー・スキル・職位・人数別ポジション構成（デリバリあり/なし両方・メモ込み）・係数・権限</b>（＝共有データ全部）。数分おきに自動でクラウドに保存され、上書き事故などはここから過去の時点に戻せます（最大60件）。「JSONダウンロード」は端末にファイル保存（オフライン保管用）。</p>
       <div class="io-msg" id="bkMsg"></div>
       <div class="acc-list" id="bkList" style="margin-top:10px"><span class="muted">—</span></div>
     </div>
@@ -1316,7 +1322,10 @@ $('#shotBtn').onclick=savePlacementImage;
 function savePlacementImage(){
   const sel=state.selected.map(id=>crById(id)).filter(Boolean);
   if(sel.length===0)return;
-  const board=$('#board');const bx=board.getBoundingClientRect();
+  const board=$('#board');
+  board.classList.add('cap-desktop');void board.offsetWidth;   // 画像は常にPC版レイアウトで描画
+  try{
+  const bx=board.getBoundingClientRect();
   if(!bx.width){showTab('board');return;}
   const dp=delPats();const deliv=(state.activePattern===dp.on.id)?'あり':'なし';
   const dateStr=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
@@ -1418,6 +1427,7 @@ function savePlacementImage(){
   const a=document.createElement('a');a.download=`station-line_placement_${dateStr.replace(/\//g,'-')}_${deliv==='あり'?'delivery':'nodelivery'}.png`;
   a.href=canvas.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();
   flashSaved();
+  }finally{board.classList.remove('cap-desktop');}
 }
 
 function renderMetrics(active){
