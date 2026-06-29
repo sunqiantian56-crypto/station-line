@@ -51,7 +51,7 @@ h2.sec{font-size:18px;font-weight:900;margin:0 0 12px}
 .btn-ghost{background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:8px 13px;font-size:12px;font-weight:700;color:var(--ink-2)}
 .btn-ghost:hover{border-color:var(--ink-2);color:var(--ink)}
 
-.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:10px;overflow:hidden;margin-bottom:10px}
 .metric{background:var(--panel);padding:10px 13px}
 .metric .lab{font-family:var(--disp);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 .metric .val{font-family:var(--mono);font-weight:700;font-size:23px;line-height:1.15}
@@ -171,10 +171,19 @@ h2.sec{font-size:18px;font-weight:900;margin:0 0 12px}
 .tray-empty{color:var(--ink-2);font-size:13px;padding:6px 2px}
 
 /* 出勤選択 */
-.crew-pick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
-.cp{border:1.5px solid var(--line);border-radius:999px;background:var(--panel-2);padding:6px 13px;font-weight:700;font-size:13px;user-select:none}
-.cp:hover{border-color:var(--ink-2)}
-.cp.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.crew-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.crew-toolbar .search{flex:1;min-width:160px;max-width:320px}
+.crew-count{font-weight:700;font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.crew-selected{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.crew-selected:empty{display:none}
+.csel{display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#fff;border-radius:999px;padding:5px 7px 5px 12px;font-weight:700;font-size:13px}
+.csel .x{border:none;background:rgba(255,255,255,.28);color:#fff;border-radius:50%;width:18px;height:18px;font-size:13px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+.csel .x:hover{background:rgba(255,255,255,.5)}
+.crew-pool-wrap{border:1px solid var(--line);border-radius:10px;background:#fff;max-height:210px;overflow:auto;margin-bottom:6px}
+.crew-pool{display:flex;flex-wrap:wrap;gap:6px;padding:9px}
+.cpool{border:1.5px solid var(--line);border-radius:999px;background:var(--panel-2);padding:6px 13px;font-weight:700;font-size:13px;user-select:none;cursor:pointer}
+.cpool:hover{border-color:var(--brand);color:var(--brand);background:#fff}
+.crew-pool-empty{color:var(--ink-2);font-size:13px;padding:8px 4px}
 
 /* デリバリ ON/OFF トグル（ラベル一体型スイッチ） */
 .pat-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -351,13 +360,16 @@ table.mini td.tt{font-family:var(--mono);font-weight:700;background:var(--panel-
 /* 管理者のみ表示 / 閲覧のみ制御 */
 .admin-only{display:none!important}
 body.is-admin .admin-only{display:flex!important}
-.read-only .sk-btn,.read-only #addCrew,.read-only .rank-sel,.read-only .row-del,.read-only .row-head-in input,
-.read-only #setBase,.read-only #setBonus,.read-only #setCap,.read-only #impBtn,
-.read-only .target-comment textarea,.read-only #addUnit,.read-only .unit-pos select,.read-only .unit .rm,.read-only .upill .x,
-.read-only #nMinus,.read-only #nPlus,.read-only #configMemo,
-.read-only #copyCfgBtn,.read-only #copyTargetN,.read-only .unit-h .drag{pointer-events:none!important;opacity:.5!important}
+/* クルー名簿（人） */
+.ro-crew #addCrew,.ro-crew .row-head-in input,.ro-crew .row-del,.ro-crew .rank-sel,.ro-crew #impBtn{pointer-events:none!important;opacity:.5!important}
+/* スキル表（スキル値・係数） */
+.ro-skills .sk-btn,.ro-skills #setBase,.ro-skills #setBonus,.ro-skills #setCap{pointer-events:none!important;opacity:.5!important}
+/* 人数別構成 */
+.ro-config .target-comment textarea,.ro-config #addUnit,.ro-config .unit-pos select,.ro-config .unit .rm,.ro-config .upill .x,
+.ro-config #nMinus,.ro-config #nPlus,.ro-config #configMemo,.ro-config #copyCfgBtn,.ro-config #copyTargetN,.ro-config .unit-h .drag{pointer-events:none!important;opacity:.5!important}
 .ro-banner{background:var(--fc-bg);border:1px solid #f0d38a;border-radius:9px;padding:9px 13px;font-size:12.5px;color:#7a5a07;margin-bottom:12px;display:none}
-.read-only .ro-banner{display:block}
+body.ro-skills #tab-skill .ro-banner,body.ro-crew #tab-skill .ro-banner{display:block}
+body.ro-config #tab-config .ro-banner{display:block}
 /* 管理画面 */
 .adm-sec{margin-top:16px}
 .acc-list{display:flex;flex-direction:column;gap:8px}
@@ -369,9 +381,12 @@ body.is-admin .admin-only{display:flex!important}
 .acc-row .sp{flex:1}
 .acc-row .btn-ghost{padding:6px 10px;font-size:12px}
 .acc-row .ce{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--ink-2)}
-.perm-modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.perm-mode{border:1.5px solid var(--line);border-radius:9px;background:var(--panel-2);padding:8px 14px;font-weight:700;font-size:13px;color:var(--ink-2)}
+.perm-modes{display:inline-flex;gap:6px;flex-wrap:wrap}
+.perm-mode{border:1.5px solid var(--line);border-radius:9px;background:var(--panel-2);padding:7px 13px;font-weight:700;font-size:13px;color:var(--ink-2)}
 .perm-mode.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.perm-area{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line-2)}
+.perm-area:last-child{border-bottom:none}
+.perm-area .pa-label{font-weight:700;font-size:13px;min-width:200px;flex:1}
 </style>
 </head>
 <body>
@@ -411,8 +426,13 @@ body.is-admin .admin-only{display:flex!important}
   <!-- 01 配置 -->
   <section id="tab-board">
     <p class="eyebrow">Crew on duty</p>
-    <div class="toolbar"><div class="search"><span class="ic">🔍</span><input id="crewSearch" placeholder="クルー検索…"></div></div>
-    <div class="crew-pick" id="crewPick"></div>
+    <div class="crew-toolbar">
+      <div class="search"><span class="ic">🔍</span><input id="crewSearch" placeholder="クルー名で検索して追加…"></div>
+      <span class="crew-count" id="crewCount">選択 0人</span>
+      <button class="btn-ghost" id="crewResetBtn">リセット</button>
+    </div>
+    <div class="crew-selected" id="crewSelected"></div>
+    <div class="crew-pool-wrap"><div class="crew-pool" id="crewPool"></div></div>
 
     <div class="pat-row"><div class="pattern-bar" id="boardPatternBar"></div></div>
 
@@ -437,6 +457,7 @@ body.is-admin .admin-only{display:flex!important}
     <div class="metrics">
       <div class="metric hero"><div class="lab">Σ Skill</div><div class="val" id="mSkill">0</div></div>
       <div class="metric"><div class="lab">Sales (pred.)</div><div class="val" id="mSales">¥0</div></div>
+      <div class="metric"><div class="lab">平均/人</div><div class="val" id="mAvgSales">¥0</div></div>
       <div class="metric"><div class="lab">配置人数</div><div class="val" id="mCrew">0</div></div>
       <div class="metric"><div class="lab">稼働枠</div><div class="val" id="mActive">0</div></div>
       <div class="metric err"><div class="lab">欠員</div><div class="val" id="mVacant">0</div></div>
@@ -457,7 +478,7 @@ body.is-admin .admin-only{display:flex!important}
       <div class="search"><span class="ic">🔍</span><input id="skillSearch" placeholder="クルー名で検索…"></div>
       <select class="filter-sel" id="filterPos"><option value="">フィルタ: 全ポジション</option></select>
       <select class="filter-sel" id="filterMin"><option value="1">1以上</option><option value="2">2以上</option><option value="3">3のみ</option></select>
-      <select class="filter-sel" id="filterRank"><option value="">職位: すべて</option><option>社員</option><option>SW</option><option>SW-T</option><option>トレーナー</option><option>トレーナーT</option><option>クルー</option></select>
+      <select class="filter-sel" id="filterRank"><option value="">職位: すべて</option><option>社員</option><option>SW</option><option>SW-T</option><option>トレーナー</option><option>トレーナーT</option><option>クルー</option><option>読売</option></select>
       <button class="btn-ghost" id="filterClear">クリア</button>
     </div>
     <div class="table-wrap"><table class="skill" id="skillTable"></table></div>
@@ -534,14 +555,17 @@ body.is-admin .admin-only{display:flex!important}
 
     <div class="panel pad adm-sec">
       <p class="eyebrow">Edit permission</p>
-      <h2 class="sec" style="margin-bottom:4px">編集権限のモード</h2>
-      <p class="sub" style="margin-bottom:8px">共有データ（スキル表・構成・係数・メモ）を誰が編集できるか。配置タブの並べ替えは各自いつでも可能です。</p>
-      <div class="perm-modes" id="permModes">
-        <button class="perm-mode" data-mode="all">全員 許可</button>
-        <button class="perm-mode" data-mode="list">個別に許可</button>
-        <button class="perm-mode" data-mode="none">全員 不許可（管理者のみ）</button>
+      <h2 class="sec" style="margin-bottom:4px">編集権限</h2>
+      <p class="sub" style="margin-bottom:8px">3つの領域それぞれで「誰が編集できるか」を設定。配置タブの出勤選択・並べ替えは各自いつでも可能です。「個別」のときは下のアカウント一覧でチェックした人だけ編集できます。</p>
+      <div id="permAreas">
+        <div class="perm-area" data-area="crew"><span class="pa-label">人（クルー名簿・職位・追加削除）</span><span class="perm-modes">
+          <button class="perm-mode" data-mode="all">全員許可</button><button class="perm-mode" data-mode="list">個別</button><button class="perm-mode" data-mode="none">不許可</button></span></div>
+        <div class="perm-area" data-area="skills"><span class="pa-label">スキル表（スキル値・係数）</span><span class="perm-modes">
+          <button class="perm-mode" data-mode="all">全員許可</button><button class="perm-mode" data-mode="list">個別</button><button class="perm-mode" data-mode="none">不許可</button></span></div>
+        <div class="perm-area" data-area="config"><span class="pa-label">人数別構成</span><span class="perm-modes">
+          <button class="perm-mode" data-mode="all">全員許可</button><button class="perm-mode" data-mode="list">個別</button><button class="perm-mode" data-mode="none">不許可</button></span></div>
       </div>
-      <p class="sub" style="margin-top:8px;font-size:11.5px">※「申請方式」は今後追加予定です。</p>
+      <p class="sub" style="margin-top:8px;font-size:11.5px">※「申請方式」は今後追加予定です。管理者は常に全部編集できます。</p>
     </div>
 
     <div class="panel pad adm-sec">
@@ -651,7 +675,7 @@ function downloadMasterJSON(){
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 async function applyRemoteMaster(data,rms){if(!data)return;
-  applyingRemote=true;applyMaster(data);state.isSeed=false;state.masterUpdatedAt=rms;lsSet('mac_masterAt',String(rms));
+  applyingRemote=true;applyMaster(data);try{migrateConfigsToFramed();}catch(e){}state.isSeed=false;state.masterUpdatedAt=rms;lsSet('mac_masterAt',String(rms));
   await saveMaster();applyingRemote=false;
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
   state.selected=state.selected.filter(id=>state.crew.find(c=>c.id===id));
@@ -703,7 +727,7 @@ function applyMaster(m){state.crew=m.crew||[];state.skills=m.skills||{};
   const s=m.settings||{};
   state.settings={base:(s.bonusPer===undefined?3000:(s.base!=null?s.base:3000)),bonusPer:(s.bonusPer!=null?s.bonusPer:10),skill4Cap:(s.skill4Cap!=null?s.skill4Cap:1)};
   state.targetComment=m.targetComment||'';
-  state.perm=Object.assign({mode:'all'},m.perm||{});
+  state.perm=normalizePerm(m.perm);
   if(typeof applyPermUI==='function')applyPermUI();
   // 構成パターン：新形式 {patterns:[{id,name}], configs:{pid:{N:[...]}}, configMemo:{pid:{N:memo}}}
   if(Array.isArray(m.patterns)&&m.patterns.length){
@@ -751,6 +775,7 @@ async function init(){
     if(sess){state.selected=(sess.selected||[]).filter(id=>state.crew.find(c=>c.id===id));state.placement=sess.placement||{};state.manual=sess.manual||{};state.activePattern=sess.activePattern||null;state.dateFields=Object.assign({m:'',d:'',dow:'',h:'',min:''},sess.dateFields||{});}
   }
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
+  try{if(migrateConfigsToFramed())scheduleSaveMaster();}catch(e){}   // INI/ASMの番号化（旧データ修正）
   state.ready=true;
   const lo=document.getElementById('loading');if(lo)lo.style.display='none';
   applyPermUI();
@@ -825,6 +850,9 @@ const LAYOUT={
 // IPレーンの物理配置と開放順: 右下IP4→右上IP3→左下IP1→左上IP2
 const LANE_GRID=[2,3,1,4];
 const LANE_ORDER={4:1,3:2,1:3,2:4};
+// 構成の番号(①〜④)とIPレーンの対応。イニシ開放順4→3→1→2、アッセン3→4→1→2
+const INI_FRAME_LANE={1:4,2:3,3:1,4:2},INI_LANE_FRAME={4:1,3:2,1:3,2:4};
+const ASM_FRAME_LANE={1:3,2:4,3:1,4:2},ASM_LANE_FRAME={3:1,4:2,1:3,2:4};
 
 /* ===== スロット生成 ===== */
 function buildSlots(){
@@ -848,7 +876,7 @@ function seed(){
   return {crew:[],skills:{},patterns:[p1,p2],configs:{[p1.id]:{},[p2.id]:{}},configMemo:{[p1.id]:{},[p2.id]:{}},settings:{base:3000,bonusPer:10,skill4Cap:1}};
 }
 
-let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false,perm:{mode:'all'},account:null,dateFields:{m:'',d:'',dow:'',h:'',min:''},dragUnit:null};
+let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false,perm:{modes:{crew:'all',skills:'all',config:'all'},grants:{}},account:null,dateFields:{m:'',d:'',dow:'',h:'',min:''},dragUnit:null};
 // セッション状態（非永続）
 state.slots=buildSlots();
 state.selected=[];          // 出勤crewId
@@ -907,11 +935,25 @@ function setCurrentAccount(a){
   applyPermUI();
 }
 function logout(){lsRemove('mac_login');location.reload();}
-function canEdit(){const a=state.account;if(!a)return false;if(a.role==='admin')return true;const mode=(state.perm&&state.perm.mode)||'all';if(mode==='all')return true;if(mode==='none')return false;return !!a.can_edit;}
+const PERM_AREAS=['crew','skills','config'];const AREA_LABEL={crew:'クルー',skills:'スキル表',config:'人数別構成'};
+function normalizePerm(p){p=p||{};
+  if(p.modes)return{modes:Object.assign({crew:'all',skills:'all',config:'all'},p.modes),grants:p.grants||{}};
+  const m=p.mode||'all';return{modes:{crew:m,skills:m,config:m},grants:{}}; // 旧 {mode} から移行
+}
+function canEditArea(area){const a=state.account;if(!a)return false;if(a.role==='admin')return true;
+  const m=(state.perm&&state.perm.modes&&state.perm.modes[area])||'all';
+  if(m==='all')return true;if(m==='none')return false;
+  const g=state.perm.grants&&state.perm.grants[a.name];return !!(g&&g[area]);}
+function canEdit(){return canEditArea('crew')||canEditArea('skills')||canEditArea('config');}
 function isAdmin(){return !!(state.account&&state.account.role==='admin');}
-function requireEdit(){if(canEdit())return true;toast('編集権限がありません（閲覧のみ）');return false;}
-function applyPermUI(){const ed=canEdit();document.body.classList.toggle('read-only',!ed&&!!state.account);document.body.classList.toggle('is-admin',isAdmin());
-  const chip=$('#whoChip');if(chip&&state.account){const r=chip.querySelector('.role');if(r)r.textContent=isAdmin()?'ADMIN':(ed?'EDIT':'VIEW');}}
+function requireEditArea(area){if(canEditArea(area))return true;toast(AREA_LABEL[area]+'の編集権限がありません');return false;}
+function requireEdit(){return requireEditArea('config');}
+function applyPermUI(){const acc=!!state.account;
+  document.body.classList.toggle('ro-crew',acc&&!canEditArea('crew'));
+  document.body.classList.toggle('ro-skills',acc&&!canEditArea('skills'));
+  document.body.classList.toggle('ro-config',acc&&!canEditArea('config'));
+  document.body.classList.toggle('is-admin',isAdmin());
+  const chip=$('#whoChip');if(chip&&state.account){const r=chip.querySelector('.role');if(r)r.textContent=isAdmin()?'ADMIN':(canEdit()?'EDIT':'VIEW');}}
 function toast(msg){const f=$('#saveFlash');if(!f)return;f.textContent=msg;f.classList.add('show');clearTimeout(flashT);flashT=setTimeout(()=>{f.classList.remove('show');f.textContent='保存しました';},1500);}
 /* 認証オーバーレイ */
 function setAuthMode(m){authMode=m;$('#authTabLogin').classList.toggle('on',m==='login');$('#authTabSignup').classList.toggle('on',m==='signup');$('#authSubmit').textContent=m==='login'?'ログイン':'登録して参加申請';setAuthMsg('','');}
@@ -938,8 +980,9 @@ function afterLogin(){subscribeAccounts();applyPermUI();renderAdmin();showTab('b
 /* 管理画面 */
 async function renderAdmin(){
   if(!isAdmin())return;
-  const mode=(state.perm&&state.perm.mode)||'all';
-  document.querySelectorAll('#permModes .perm-mode').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  const modes=(state.perm&&state.perm.modes)||{};
+  document.querySelectorAll('#permAreas .perm-area').forEach(row=>{const area=row.dataset.area;const m=modes[area]||'all';
+    row.querySelectorAll('.perm-mode').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));});
   const box=$('#accList');if(!box)return;
   let list;try{list=await acctAll();}catch(e){box.innerHTML='<span class="muted">読み込めません（オフライン）</span>';return;}
   const pend=list.filter(a=>a.status==='pending').length;
@@ -992,11 +1035,16 @@ function accRow(a){
   if(a.status!=='approved'){const ap=document.createElement('button');ap.className='btn-ghost';ap.textContent='承認';ap.onclick=()=>accSet(a.name,{status:'approved'});row.appendChild(ap);}
   if(a.status==='pending'){const rj=document.createElement('button');rj.className='btn-ghost';rj.textContent='拒否';rj.onclick=()=>accSet(a.name,{status:'rejected'});row.appendChild(rj);}
   if(a.status==='approved'&&a.role!=='admin'){
-    const ce=document.createElement('label');ce.className='ce';const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!a.can_edit;cb.onchange=()=>accSet(a.name,{can_edit:cb.checked});ce.appendChild(cb);ce.appendChild(document.createTextNode('編集可'));row.appendChild(ce);
+    const g=(state.perm.grants&&state.perm.grants[a.name])||{};
+    [['crew','人'],['skills','スキル'],['config','構成']].forEach(([ar,lab])=>{
+      const ce=document.createElement('label');ce.className='ce';const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!g[ar];
+      cb.onchange=()=>setGrant(a.name,ar,cb.checked);ce.appendChild(cb);ce.appendChild(document.createTextNode(lab));row.appendChild(ce);
+    });
   }
   if(!me){const del=document.createElement('button');del.className='btn-ghost';del.style.color='var(--brand)';del.textContent='削除';del.onclick=async()=>{const ok=await showModal('「'+a.name+'」を削除しますか？','削除する','やめる');if(ok)accDelete(a.name);};row.appendChild(del);}
   return row;
 }
+function setGrant(name,area,val){if(!isAdmin())return;state.perm.grants=state.perm.grants||{};state.perm.grants[name]=state.perm.grants[name]||{};state.perm.grants[name][area]=val;save();applyPermUI();}
 async function accSet(name,patch){try{await ensureClient().from('accounts').update(patch).eq('name',name);await renderAdmin();}catch(e){toast('更新に失敗しました');}}
 async function accDelete(name){try{await ensureClient().from('accounts').delete().eq('name',name);await renderAdmin();}catch(e){toast('削除に失敗しました');}}
 /* イベント結線 */
@@ -1019,7 +1067,7 @@ document.getElementById('accRefresh').onclick=()=>renderAdmin();
 document.getElementById('bkRefresh').onclick=()=>renderBackups();
 document.getElementById('bkDownload').onclick=()=>{downloadMasterJSON();setBkMsg('JSONをダウンロードしました（端末に保存）。','ok');};
 document.getElementById('bkNow').onclick=async()=>{if(!sbClient){setBkMsg('クラウド未接続です','ng');return;}setBkMsg('バックアップ中…','');await maybeBackup(true);await renderBackups();setBkMsg('バックアップしました。','ok');};
-document.querySelectorAll('#permModes .perm-mode').forEach(b=>b.onclick=()=>{if(!isAdmin())return;state.perm={mode:b.dataset.mode};save();renderAdmin();applyPermUI();});
+document.querySelectorAll('#permAreas .perm-area').forEach(row=>{const area=row.dataset.area;row.querySelectorAll('.perm-mode').forEach(b=>b.onclick=()=>{if(!isAdmin())return;state.perm.modes=state.perm.modes||{};state.perm.modes[area]=b.dataset.mode;save();renderAdmin();applyPermUI();});});
 
 /* ===== 構成パターン：デリバリ あり(ON)／なし(OFF) のトグル ===== */
 function activeConfigs(){const pid=state.activePattern||(state.patterns[0]&&state.patterns[0].id);state.configs[pid]=state.configs[pid]||{};return state.configs[pid];}
@@ -1047,22 +1095,30 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show
 
 /* ===== 01 配置 ===== */
 function renderCrewPick(){
-  const box=$('#crewPick');box.innerHTML='';
-  if(state.crew.length===0){box.innerHTML='<span class="muted">スキル表でクルーを追加してください</span>';return;}
-  const q=(state.crewSearch||'').trim();
-  const list=state.crew.filter(c=>!q||c.name.includes(q)||state.selected.includes(c.id));
-  if(list.length===0){box.innerHTML='<span class="muted">該当するクルーがいません</span>';return;}
-  list.forEach(c=>{
-    const on=state.selected.includes(c.id);
-    const el=document.createElement('div');el.className='cp'+(on?' on':'');el.textContent=c.name;
-    el.onclick=()=>{const i=state.selected.indexOf(c.id);if(i>=0){state.selected.splice(i,1);
-      // 出勤外したクルーの配置を解除
-      Object.keys(state.placement).forEach(sid=>{if(state.placement[sid]===c.id){delete state.placement[sid];delete state.manual[sid];}});
-    }else state.selected.push(c.id);
-    state.lastErrors=[];state.errSlots=new Set();renderBoard();};
-    box.appendChild(el);
+  const selBox=$('#crewSelected'),pool=$('#crewPool'),cnt=$('#crewCount');if(!selBox||!pool)return;
+  cnt.textContent='選択 '+state.selected.length+'人';
+  // 選択中（出勤）クルー：赤チップ＋×で外す
+  selBox.innerHTML='';
+  state.selected.forEach(id=>{const c=crById(id);if(!c)return;
+    const chip=document.createElement('span');chip.className='csel';
+    const nm=document.createElement('span');nm.textContent=c.name;chip.appendChild(nm);
+    const x=document.createElement('button');x.className='x';x.textContent='×';x.title='出勤から外す';x.onclick=()=>deselectCrew(id);
+    chip.appendChild(x);selBox.appendChild(chip);
   });
+  // 未選択プール：検索フィルタ＋五十音順、タップで追加
+  pool.innerHTML='';
+  if(state.crew.length===0){pool.innerHTML='<span class="crew-pool-empty">スキル表でクルーを追加してください</span>';return;}
+  const q=(state.crewSearch||'').trim();
+  const list=state.crew.filter(c=>!state.selected.includes(c.id)&&(!q||c.name.includes(q))).slice().sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  if(list.length===0){pool.innerHTML='<span class="crew-pool-empty">'+(q?'該当するクルーがいません':'全員選択済み')+'</span>';return;}
+  list.forEach(c=>{const el=document.createElement('div');el.className='cpool';el.textContent=c.name;el.onclick=()=>selectCrew(c.id);pool.appendChild(el);});
 }
+function selectCrew(id){if(!state.selected.includes(id))state.selected.push(id);state.lastErrors=[];state.errSlots=new Set();renderBoard();}
+function deselectCrew(id){const i=state.selected.indexOf(id);if(i>=0)state.selected.splice(i,1);
+  Object.keys(state.placement).forEach(sid=>{if(state.placement[sid]===id){delete state.placement[sid];delete state.manual[sid];}});
+  state.lastErrors=[];state.errSlots=new Set();renderBoard();}
+function resetCrewSel(){if(!state.selected.length&&!Object.keys(state.placement).length)return;
+  state.selected=[];state.placement={};state.manual={};state.lastErrors=[];state.errSlots=new Set();state.pickedChip=null;renderBoard();}
 
 function placedCount(cid){return Object.values(state.placement).filter(x=>x===cid).length;}
 function placedWhere(cid){return Object.keys(state.placement).filter(sid=>state.placement[sid]===cid).map(sid=>{const s=slotById(sid);return s?posLabel(s):'';}).filter(Boolean);}
@@ -1158,10 +1214,18 @@ function computeActiveSlots(){
     const hasINI=u.pos.some(pk=>basePk(pk)==='INI');
     u.pos.forEach(pk=>{
       const base=basePk(pk),fr=frameOf(pk);
-      if(base==='ASM'&&!hasINI){deferAsm.push(ui);return;}  // 単独ASMは後回し
       let slot=null;
-      if(fr){slot=state.slots.find(s=>s.id===base+'_'+fr && !set.has(s.id));}
-      else if(base==='ASM'){ // 掛け持ち：同持ち場INIと同じレーン
+      if(fr){ // 番号指定：INI#n/ASM#nはレーンへ、その他は base_n へ
+        let sid;
+        if(base==='INI')sid='INI_IP'+(INI_FRAME_LANE[fr]||fr);
+        else if(base==='ASM')sid='ASM_IP'+(ASM_FRAME_LANE[fr]||fr);
+        else sid=base+'_'+fr;
+        slot=state.slots.find(s=>s.id===sid && !set.has(s.id));
+        if(slot){take(slot.id,ui);if(base==='INI')laneOfUnit[ui]=slot.lane;}
+        return;
+      }
+      if(base==='ASM'&&!hasINI){deferAsm.push(ui);return;}  // 単独ASM(番号なし)は後回し
+      if(base==='ASM'){ // 掛け持ち(番号なし)：同持ち場INIと同じレーン
         const lane=laneOfUnit[ui];
         if(lane)slot=state.slots.find(s=>s.id==='ASM_IP'+lane && !set.has(s.id));
         if(!slot){const c=state.slots.filter(s=>s.pos==='ASM'&&!set.has(s.id)).sort((a,b)=>LANE_ORDER[a.lane]-LANE_ORDER[b.lane]);slot=c[0];}
@@ -1185,6 +1249,34 @@ function computeActiveSlots(){
   return set;
 }
 function laneOrd(s){return s.lane?LANE_ORDER[s.lane]:(s.no||1);}
+// 旧データ移行：番号なしの INI/ASM を、現状と同じレーン割当のまま INI#n/ASM#n に変換（冪等）
+function migrateUnitsIP(units){
+  if(!Array.isArray(units))return false;
+  let changed=false;const used=new Set();const laneOfUnit={};const deferAsm=[];
+  units.forEach((u,ui)=>{
+    if(!u||!Array.isArray(u.pos))return;
+    const hasINI=u.pos.some(pk=>basePk(pk)==='INI');
+    u.pos.forEach((pk,pi)=>{
+      const base=basePk(pk),fr=frameOf(pk);
+      if(fr){ if(base==='INI'){const L=INI_FRAME_LANE[fr];if(L){used.add('INI_IP'+L);laneOfUnit[ui]=L;}}else if(base==='ASM'){const L=ASM_FRAME_LANE[fr];if(L)used.add('ASM_IP'+L);} return; }
+      if(base==='ASM'&&!hasINI){deferAsm.push({ui,pi});return;}
+      if(base==='INI'){const L=[4,3,1,2].find(x=>!used.has('INI_IP'+x));if(L){used.add('INI_IP'+L);laneOfUnit[ui]=L;u.pos[pi]='INI#'+INI_LANE_FRAME[L];changed=true;}}
+      else if(base==='ASM'){let L=laneOfUnit[ui];if(L==null||used.has('ASM_IP'+L))L=[4,3,1,2].find(x=>!used.has('ASM_IP'+x));if(L){used.add('ASM_IP'+L);u.pos[pi]='ASM#'+ASM_LANE_FRAME[L];changed=true;}}
+    });
+  });
+  const openLanes=new Set();used.forEach(id=>{const m=id.match(/_IP(\d)/);if(m)openLanes.add(+m[1]);});
+  deferAsm.forEach(({ui,pi})=>{
+    let L=[3,4,1,2].find(x=>openLanes.has(x)&&!used.has('ASM_IP'+x));
+    if(L==null)L=[4,3,1,2].find(x=>!used.has('ASM_IP'+x));
+    if(L){used.add('ASM_IP'+L);units[ui].pos[pi]='ASM#'+ASM_LANE_FRAME[L];openLanes.add(L);changed=true;}
+  });
+  return changed;
+}
+function migrateConfigsToFramed(){let changed=false;
+  Object.values(state.configs||{}).forEach(byN=>{if(!byN||typeof byN!=='object')return;
+    Object.values(byN).forEach(units=>{if(migrateUnitsIP(units))changed=true;});});
+  return changed;
+}
 
 function renderKitchen(active){
   const area=document.createElement('div');area.className='area kit';
@@ -1200,7 +1292,7 @@ function renderKitchen(active){
     ln.appendChild(ls);ip.appendChild(ln);
   });
   body.appendChild(ip);
-  ['GRL_1','FRY_1','EGG_1'].forEach(id=>body.appendChild(slotEl(id,active)));
+  ['EGG_1','GRL_1','FRY_1'].forEach(id=>body.appendChild(slotEl(id,active)));
   return area;
 }
 function renderArea(akey,active){
@@ -1334,6 +1426,7 @@ function savePlacementImage(){
   const metrics=[
     {lab:'Σ SKILL',val:$('#mSkill').textContent,accent:true},
     {lab:'SALES (PRED.)',val:$('#mSales').textContent},
+    {lab:'平均/人',val:$('#mAvgSales').textContent},
     {lab:'配置人数',val:$('#mCrew').textContent},
     {lab:'稼働枠',val:$('#mActive').textContent},
     {lab:'欠員',val:$('#mVacant').textContent,accent:true},
@@ -1446,6 +1539,8 @@ function renderMetrics(active){
   });
   $('#mSkill').textContent=totalSkill;
   $('#mSales').textContent='¥'+Math.round(sales).toLocaleString('ja-JP');
+  const avg=placedCrew.size?Math.round(sales/placedCrew.size):0;
+  $('#mAvgSales').textContent='¥'+avg.toLocaleString('ja-JP');
   $('#mCrew').textContent=placedCrew.size;
   $('#mActive').textContent=active.size;
   $('#mVacant').textContent=vacant;
@@ -1459,7 +1554,7 @@ function renderMetrics(active){
 const SKILL_POS=POSDEF.filter(p=>!p.noskill);
 function crewTotal(cid){return SKILL_POS.reduce((s,p)=>s+skVal(cid,p.key),0);}
 function renderLegend(){const L=$('#legend');const t=['不可','一通り','任せられる','強い','エース'];L.innerHTML=t.map((x,i)=>`<span class="item"><span class="sw sk${i}">${i}</span>${x}</span>`).join('')+`<span class="hint-click">クリックで+1 / Shift+クリックで−1 ／ エース(4)は各ポジ${state.settings.skill4Cap||1}人まで</span>`;}
-const RANKS=['社員','SW','SW-T','トレーナー','トレーナーT','クルー'];
+const RANKS=['社員','SW','SW-T','トレーナー','トレーナーT','クルー','読売'];
 function crewRank(c){return c.rank||'クルー';}
 function sortedFilteredCrew(){
   let list=state.crew.slice();
@@ -1572,6 +1667,7 @@ $('#setBonus').onchange=e=>{state.settings.bonusPer=Math.max(0,Math.min(100,+e.t
 $('#setCap').onchange=e=>{state.settings.skill4Cap=Math.max(1,Math.round(+e.target.value||1));save();renderSkill();};
 // 配置タブ クルー検索
 $('#crewSearch').oninput=()=>{state.crewSearch=$('#crewSearch').value;renderCrewPick();};
+$('#crewResetBtn').onclick=resetCrewSel;
 const DATE_FIELD_IDS={dM:'m',dD:'d',dDow:'dow',dH:'h',dMin:'min'};
 function fillDateFields(){const f=state.dateFields||{};Object.entries(DATE_FIELD_IDS).forEach(([id,k])=>{const el=$('#'+id);if(el&&document.activeElement!==el)el.value=f[k]||'';});}
 Object.entries(DATE_FIELD_IDS).forEach(([id,k])=>{const el=$('#'+id);if(el)el.oninput=el.onchange=()=>{state.dateFields=state.dateFields||{};state.dateFields[k]=el.value;scheduleSaveSession();};});
@@ -1591,7 +1687,7 @@ $('#copyBtn').onclick=()=>{const ta=$('#expArea');if(!ta.value)ta.value=JSON.str
 $('#impBtn').onclick=()=>{const txt=$('#impArea').value.trim();if(!txt){setIoMsg('JSONを貼り付けてください','ng');return;}
   let obj;try{obj=JSON.parse(txt);}catch(e){setIoMsg('JSONの形式が不正です','ng');return;}
   if(!obj||!Array.isArray(obj.crew)){setIoMsg('クルーデータが見つかりません','ng');return;}
-  applyMaster(obj);saveMaster();state.selected=state.selected.filter(id=>state.crew.find(c=>c.id===id));
+  applyMaster(obj);try{migrateConfigsToFramed();}catch(e){}saveMaster();state.selected=state.selected.filter(id=>state.crew.find(c=>c.id===id));
   if(!state.patterns.find(p=>p.id===state.activePattern))state.activePattern=state.patterns[0]?state.patterns[0].id:null;
   setIoMsg('読み込みました（'+state.crew.length+'名）','ok');renderSkill();renderBoard();};
 
@@ -1602,6 +1698,21 @@ function syncFillFields(){}
 /* ===== 03 人数別構成 ===== */
 const AUTO_POS=POSDEF.filter(p=>!p.manual); // 自動対象ポジション
 const CONFIG_POS=POSDEF.filter(p=>!p.manual||p.key==='SMG'); // 構成で選べるポジション（＋シフトマネージャー）
+// 構成の階層化ドロップダウン（各ポジションは1グループに1回だけ）
+const CONFIG_GROUPS=[
+  {g:'イニシエーター（開放順 ①4→②3→③1→④2）',items:[{v:'INI#1',l:'イニシエーター①'},{v:'INI#2',l:'イニシエーター②'},{v:'INI#3',l:'イニシエーター③'},{v:'INI#4',l:'イニシエーター④'}]},
+  {g:'アッセンブラー（①3→②4→③1→④2）',items:[{v:'ASM#1',l:'アッセンブラー①'},{v:'ASM#2',l:'アッセンブラー②'},{v:'ASM#3',l:'アッセンブラー③'},{v:'ASM#4',l:'アッセンブラー④'}]},
+  {g:'ストッカー',items:[{v:'EGG',l:'エッグ'},{v:'GRL',l:'グリル'},{v:'FRY',l:'フライヤー'}]},
+  {g:'ドリンカー',items:[{v:'FCD',l:'FCドリンカー'},{v:'DKD',l:'DTドリンカー'}]},
+  {g:'ランナー',items:[{v:'FCR',l:'FCランナー'},{v:'DKR',l:'DTランナー'}]},
+  {g:'プレゼンター',items:[{v:'FCP',l:'FCプレゼンター'},{v:'DKP',l:'DTプレゼンター'}]},
+  {g:'DT ドライブスルー',items:[{v:'DKC',l:'DTキャッシャー'},{v:'OTL#1',l:'OTレーン①'},{v:'OTL#2',l:'OTレーン②'}]},
+  {g:'FC フロント',items:[{v:'POT',l:'ポテト'},{v:'ODT',l:'オーダーテイカー'}]},
+  {g:'サービス',items:[{v:'TBL',l:'テーブルサービス'},{v:'GEL',l:'GEL'}]},
+  {g:'MDS',items:[{v:'RDR',l:'ライダー'},{v:'DOT',l:'DOT'}]},
+  {g:'CAFE',items:[{v:'CAF',l:'cafe'}]},
+  {g:'マネージャー',items:[{v:'SMG',l:'シフトマネージャー'}]},
+];
 function renderConfig(){
   const N=state.curN;$('#nNum').textContent=N;
   renderPatternToggle($('#configPatternBar'));
@@ -1623,7 +1734,7 @@ function renderConfig(){
     const rm=document.createElement('button');rm.className='rm';rm.innerHTML='×';
     rm.onclick=()=>{cfg.splice(ui,1);o[N]=cfg;save();renderConfig();};
     h.appendChild(rm);card.appendChild(h);
-    if(canEdit()){
+    if(canEditArea('config')){
       handle.draggable=true;
       handle.addEventListener('dragstart',e=>{state.dragUnit=ui;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(ui));}catch(_){}});
       handle.addEventListener('dragend',()=>{card.classList.remove('dragging');clearUnitDrop();state.dragUnit=null;});
@@ -1642,8 +1753,7 @@ function renderConfig(){
       pill.appendChild(x);pp.appendChild(pill);});
     // 追加select
     const sel=document.createElement('select');
-    const opts=[];CONFIG_POS.forEach(p=>{if(p.key==='OTL'){opts.push({v:'OTL#1',l:'OTレーン①'});opts.push({v:'OTL#2',l:'OTレーン②'});}else opts.push({v:p.key,l:p.name});});
-    sel.innerHTML='<option value="">＋ポジション追加…</option>'+opts.map(o=>`<option value="${o.v}">${esc(o.l)}</option>`).join('');
+    sel.innerHTML='<option value="">＋ポジション追加…</option>'+CONFIG_GROUPS.map(grp=>`<optgroup label="${esc(grp.g)}">`+grp.items.map(o=>`<option value="${o.v}">${esc(o.l)}</option>`).join('')+'</optgroup>').join('');
     sel.onchange=()=>{if(sel.value){u.pos.push(sel.value);save();renderConfig();}};
     pp.appendChild(sel);card.appendChild(pp);box.appendChild(card);
   });
