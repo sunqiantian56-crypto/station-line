@@ -1124,7 +1124,6 @@ function placedWhere(cid){return Object.keys(state.placement).filter(sid=>state.
 function basePk(pk){return pk.indexOf('#')>=0?pk.split('#')[0]:pk;}
 function frameOf(pk){return pk.indexOf('#')>=0?+pk.split('#')[1]:0;}
 function posNameOf(pk){const b=basePk(pk),f=frameOf(pk);const p=POS[b];const nm=p?p.name:('?'+b);
-  if(f&&(b==='INI'||b==='ASM'))return nm+' IP'+f;
   return nm+(f?('①②③④⑤⑥'[f-1]||('('+f+')')):'');}
 function posLabel(s){const p=POS[s.pos];return p.name+(s.lane?(' '+s.label):(p.count>1?('①②③④'[s.no-1]||s.no):''));}
 
@@ -1716,8 +1715,8 @@ const AUTO_POS=POSDEF.filter(p=>!p.manual); // 自動対象ポジション
 const CONFIG_POS=POSDEF.filter(p=>!p.manual||p.key==='SMG'); // 構成で選べるポジション（＋シフトマネージャー）
 // 構成の階層化ドロップダウン（各ポジションは1グループに1回だけ）
 const CONFIG_GROUPS=[
-  {g:'イニシエーター（配置順 IP4→3→1→2）',items:[{v:'INI#4',l:'イニシエーター IP4'},{v:'INI#3',l:'イニシエーター IP3'},{v:'INI#1',l:'イニシエーター IP1'},{v:'INI#2',l:'イニシエーター IP2'}]},
-  {g:'アッセンブラー（配置順 IP3→4→1→2）',items:[{v:'ASM#3',l:'アッセンブラー IP3'},{v:'ASM#4',l:'アッセンブラー IP4'},{v:'ASM#1',l:'アッセンブラー IP1'},{v:'ASM#2',l:'アッセンブラー IP2'}]},
+  {g:'イニシエーター',items:[{v:'INI#4',l:'イニシエーター④'},{v:'INI#3',l:'イニシエーター③'},{v:'INI#1',l:'イニシエーター①'},{v:'INI#2',l:'イニシエーター②'}]},
+  {g:'アッセンブラー',items:[{v:'ASM#3',l:'アッセンブラー③'},{v:'ASM#4',l:'アッセンブラー④'},{v:'ASM#1',l:'アッセンブラー①'},{v:'ASM#2',l:'アッセンブラー②'}]},
   {g:'ストッカー',items:[{v:'EGG',l:'エッグ'},{v:'GRL',l:'グリル'},{v:'FRY',l:'フライヤー'}]},
   {g:'ドリンカー',items:[{v:'FCD',l:'FCドリンカー'},{v:'DKD',l:'DTドリンカー'}]},
   {g:'ランナー',items:[{v:'FCR',l:'FCランナー'},{v:'DKR',l:'DTランナー'}]},
