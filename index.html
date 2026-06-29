@@ -628,7 +628,7 @@ const lsOK=(function(){try{localStorage.setItem('__mac_t','1');localStorage.remo
 function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function offMode(){return lsOK?'localsave':'local';}
-function masterObj(){return{crew:state.crew,skills:state.skills,patterns:state.patterns,configs:state.configs,settings:state.settings,configMemo:state.configMemo,targetComment:state.targetComment,perm:state.perm};}
+function masterObj(){return{crew:state.crew,skills:state.skills,patterns:state.patterns,configs:state.configs,settings:state.settings,configMemo:state.configMemo,targetComment:state.targetComment,perm:state.perm,cfgScheme:state.cfgScheme};}
 function sessionObj(){return{selected:state.selected,placement:state.placement,manual:state.manual,activePattern:state.activePattern,dateFields:state.dateFields};}
 async function saveMaster(){const s=JSON.stringify(masterObj());
   try{if(!hasStore)throw 0;await window.storage.set('mac_master',s,true);}
@@ -728,6 +728,7 @@ function applyMaster(m){state.crew=m.crew||[];state.skills=m.skills||{};
   state.settings={base:(s.bonusPer===undefined?3000:(s.base!=null?s.base:3000)),bonusPer:(s.bonusPer!=null?s.bonusPer:10),skill4Cap:(s.skill4Cap!=null?s.skill4Cap:1)};
   state.targetComment=m.targetComment||'';
   state.perm=normalizePerm(m.perm);
+  state.cfgScheme=m.cfgScheme||'';
   if(typeof applyPermUI==='function')applyPermUI();
   // 構成パターン：新形式 {patterns:[{id,name}], configs:{pid:{N:[...]}}, configMemo:{pid:{N:memo}}}
   if(Array.isArray(m.patterns)&&m.patterns.length){
@@ -850,9 +851,7 @@ const LAYOUT={
 // IPレーンの物理配置と開放順: 右下IP4→右上IP3→左下IP1→左上IP2
 const LANE_GRID=[2,3,1,4];
 const LANE_ORDER={4:1,3:2,1:3,2:4};
-// 構成の番号(①〜④)とIPレーンの対応。イニシ開放順4→3→1→2、アッセン3→4→1→2
-const INI_FRAME_LANE={1:4,2:3,3:1,4:2},INI_LANE_FRAME={4:1,3:2,1:3,2:4};
-const ASM_FRAME_LANE={1:3,2:4,3:1,4:2},ASM_LANE_FRAME={3:1,4:2,1:3,2:4};
+// INI#n/ASM#n の n は IP番号そのもの（INI#4 = IP4）。配置順は イニシ4→3→1→2 / アッセン3→4→1→2
 
 /* ===== スロット生成 ===== */
 function buildSlots(){
@@ -876,7 +875,7 @@ function seed(){
   return {crew:[],skills:{},patterns:[p1,p2],configs:{[p1.id]:{},[p2.id]:{}},configMemo:{[p1.id]:{},[p2.id]:{}},settings:{base:3000,bonusPer:10,skill4Cap:1}};
 }
 
-let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false,perm:{modes:{crew:'all',skills:'all',config:'all'},grants:{}},account:null,dateFields:{m:'',d:'',dow:'',h:'',min:''},dragUnit:null};
+let state={crew:[],skills:{},patterns:[],configs:{},settings:{base:3000,bonusPer:10,skill4Cap:1},configMemo:{},targetComment:'',sync:{url:'',key:'',room:'shared'},masterUpdatedAt:0,isSeed:false,perm:{modes:{crew:'all',skills:'all',config:'all'},grants:{}},cfgScheme:'',account:null,dateFields:{m:'',d:'',dow:'',h:'',min:''},dragUnit:null};
 // セッション状態（非永続）
 state.slots=buildSlots();
 state.selected=[];          // 出勤crewId
@@ -1124,7 +1123,9 @@ function placedCount(cid){return Object.values(state.placement).filter(x=>x===ci
 function placedWhere(cid){return Object.keys(state.placement).filter(sid=>state.placement[sid]===cid).map(sid=>{const s=slotById(sid);return s?posLabel(s):'';}).filter(Boolean);}
 function basePk(pk){return pk.indexOf('#')>=0?pk.split('#')[0]:pk;}
 function frameOf(pk){return pk.indexOf('#')>=0?+pk.split('#')[1]:0;}
-function posNameOf(pk){const f=frameOf(pk);const p=POS[basePk(pk)];const nm=p?p.name:('?'+basePk(pk));return nm+(f?('①②③④⑤⑥'[f-1]||('('+f+')')):'');}
+function posNameOf(pk){const b=basePk(pk),f=frameOf(pk);const p=POS[b];const nm=p?p.name:('?'+b);
+  if(f&&(b==='INI'||b==='ASM'))return nm+' IP'+f;
+  return nm+(f?('①②③④⑤⑥'[f-1]||('('+f+')')):'');}
 function posLabel(s){const p=POS[s.pos];return p.name+(s.lane?(' '+s.label):(p.count>1?('①②③④'[s.no-1]||s.no):''));}
 
 function renderChips(){
@@ -1215,10 +1216,10 @@ function computeActiveSlots(){
     u.pos.forEach(pk=>{
       const base=basePk(pk),fr=frameOf(pk);
       let slot=null;
-      if(fr){ // 番号指定：INI#n/ASM#nはレーンへ、その他は base_n へ
+      if(fr){ // 番号指定：INI#n/ASM#n は IPn へ、その他は base_n へ
         let sid;
-        if(base==='INI')sid='INI_IP'+(INI_FRAME_LANE[fr]||fr);
-        else if(base==='ASM')sid='ASM_IP'+(ASM_FRAME_LANE[fr]||fr);
+        if(base==='INI')sid='INI_IP'+fr;
+        else if(base==='ASM')sid='ASM_IP'+fr;
         else sid=base+'_'+fr;
         slot=state.slots.find(s=>s.id===sid && !set.has(s.id));
         if(slot){take(slot.id,ui);if(base==='INI')laneOfUnit[ui]=slot.lane;}
@@ -1258,21 +1259,36 @@ function migrateUnitsIP(units){
     const hasINI=u.pos.some(pk=>basePk(pk)==='INI');
     u.pos.forEach((pk,pi)=>{
       const base=basePk(pk),fr=frameOf(pk);
-      if(fr){ if(base==='INI'){const L=INI_FRAME_LANE[fr];if(L){used.add('INI_IP'+L);laneOfUnit[ui]=L;}}else if(base==='ASM'){const L=ASM_FRAME_LANE[fr];if(L)used.add('ASM_IP'+L);} return; }
+      if(fr){ if(base==='INI'){used.add('INI_IP'+fr);laneOfUnit[ui]=fr;}else if(base==='ASM'){used.add('ASM_IP'+fr);} return; }
       if(base==='ASM'&&!hasINI){deferAsm.push({ui,pi});return;}
-      if(base==='INI'){const L=[4,3,1,2].find(x=>!used.has('INI_IP'+x));if(L){used.add('INI_IP'+L);laneOfUnit[ui]=L;u.pos[pi]='INI#'+INI_LANE_FRAME[L];changed=true;}}
-      else if(base==='ASM'){let L=laneOfUnit[ui];if(L==null||used.has('ASM_IP'+L))L=[4,3,1,2].find(x=>!used.has('ASM_IP'+x));if(L){used.add('ASM_IP'+L);u.pos[pi]='ASM#'+ASM_LANE_FRAME[L];changed=true;}}
+      if(base==='INI'){const L=[4,3,1,2].find(x=>!used.has('INI_IP'+x));if(L){used.add('INI_IP'+L);laneOfUnit[ui]=L;u.pos[pi]='INI#'+L;changed=true;}}
+      else if(base==='ASM'){let L=laneOfUnit[ui];if(L==null||used.has('ASM_IP'+L))L=[4,3,1,2].find(x=>!used.has('ASM_IP'+x));if(L){used.add('ASM_IP'+L);u.pos[pi]='ASM#'+L;changed=true;}}
     });
   });
   const openLanes=new Set();used.forEach(id=>{const m=id.match(/_IP(\d)/);if(m)openLanes.add(+m[1]);});
   deferAsm.forEach(({ui,pi})=>{
     let L=[3,4,1,2].find(x=>openLanes.has(x)&&!used.has('ASM_IP'+x));
     if(L==null)L=[4,3,1,2].find(x=>!used.has('ASM_IP'+x));
-    if(L){used.add('ASM_IP'+L);units[ui].pos[pi]='ASM#'+ASM_LANE_FRAME[L];openLanes.add(L);changed=true;}
+    if(L){used.add('ASM_IP'+L);units[ui].pos[pi]='ASM#'+L;openLanes.add(L);changed=true;}
   });
   return changed;
 }
+// 旧版で ①②③④ 方式（INI#1=IP4 …）に変換済みのデータを IP直値方式へ一度だけ再変換
+function remapOldFramedScheme(){
+  if(state.cfgScheme==='lane')return false;
+  const OLD_INI={1:4,2:3,3:1,4:2},OLD_ASM={1:3,2:4,3:1,4:2};
+  let changed=false;
+  Object.values(state.configs||{}).forEach(byN=>{if(!byN||typeof byN!=='object')return;
+    Object.values(byN).forEach(units=>{if(!Array.isArray(units))return;units.forEach(u=>{if(!u||!Array.isArray(u.pos))return;
+      u.pos=u.pos.map(pk=>{const b=basePk(pk),f=frameOf(pk);if(!f)return pk;
+        if(b==='INI'&&OLD_INI[f]){changed=true;return 'INI#'+OLD_INI[f];}
+        if(b==='ASM'&&OLD_ASM[f]){changed=true;return 'ASM#'+OLD_ASM[f];}
+        return pk;});});});});
+  state.cfgScheme='lane';
+  return changed;
+}
 function migrateConfigsToFramed(){let changed=false;
+  if(remapOldFramedScheme())changed=true;
   Object.values(state.configs||{}).forEach(byN=>{if(!byN||typeof byN!=='object')return;
     Object.values(byN).forEach(units=>{if(migrateUnitsIP(units))changed=true;});});
   return changed;
@@ -1700,8 +1716,8 @@ const AUTO_POS=POSDEF.filter(p=>!p.manual); // 自動対象ポジション
 const CONFIG_POS=POSDEF.filter(p=>!p.manual||p.key==='SMG'); // 構成で選べるポジション（＋シフトマネージャー）
 // 構成の階層化ドロップダウン（各ポジションは1グループに1回だけ）
 const CONFIG_GROUPS=[
-  {g:'イニシエーター（開放順 ①4→②3→③1→④2）',items:[{v:'INI#1',l:'イニシエーター①'},{v:'INI#2',l:'イニシエーター②'},{v:'INI#3',l:'イニシエーター③'},{v:'INI#4',l:'イニシエーター④'}]},
-  {g:'アッセンブラー（①3→②4→③1→④2）',items:[{v:'ASM#1',l:'アッセンブラー①'},{v:'ASM#2',l:'アッセンブラー②'},{v:'ASM#3',l:'アッセンブラー③'},{v:'ASM#4',l:'アッセンブラー④'}]},
+  {g:'イニシエーター（配置順 IP4→3→1→2）',items:[{v:'INI#4',l:'イニシエーター IP4'},{v:'INI#3',l:'イニシエーター IP3'},{v:'INI#1',l:'イニシエーター IP1'},{v:'INI#2',l:'イニシエーター IP2'}]},
+  {g:'アッセンブラー（配置順 IP3→4→1→2）',items:[{v:'ASM#3',l:'アッセンブラー IP3'},{v:'ASM#4',l:'アッセンブラー IP4'},{v:'ASM#1',l:'アッセンブラー IP1'},{v:'ASM#2',l:'アッセンブラー IP2'}]},
   {g:'ストッカー',items:[{v:'EGG',l:'エッグ'},{v:'GRL',l:'グリル'},{v:'FRY',l:'フライヤー'}]},
   {g:'ドリンカー',items:[{v:'FCD',l:'FCドリンカー'},{v:'DKD',l:'DTドリンカー'}]},
   {g:'ランナー',items:[{v:'FCR',l:'FCランナー'},{v:'DKR',l:'DTランナー'}]},
